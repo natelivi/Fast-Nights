@@ -1,0 +1,512 @@
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --asphalt: #0A0A0C;
+    --asphalt-2: #131417;
+    --steel: #6B6F76;
+    --chrome: #E8E6E1;
+    --redline: #E01B24;
+    --nos: #2FD4E8;
+    --amber: #FFA51F;
+    --green: #3BE07A;
+  }
+
+  html, body {
+    background: var(--asphalt);
+    color: var(--chrome);
+    font-family: 'Barlow Condensed', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  body {
+    min-height: 100vh;
+    background-image:
+      repeating-linear-gradient(90deg, transparent 0 2px, rgba(255,255,255,.014) 2px 3px),
+      radial-gradient(120% 60% at 50% 0%, rgba(224,27,36,.10), transparent 60%);
+  }
+
+  .wrap { max-width: 480px; margin: 0 auto; padding: 0 18px 64px; }
+
+  /* ---------- masthead ---------- */
+  .mast { padding: 34px 0 20px; text-align: center; }
+  .mast .kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: .34em; text-transform: uppercase;
+    color: var(--steel);
+  }
+  .mast h1 {
+    font-family: 'Anton', sans-serif;
+    font-size: clamp(38px, 13vw, 58px);
+    line-height: .86; letter-spacing: -.01em;
+    text-transform: uppercase;
+    transform: skewX(-8deg);
+    margin: 10px 0 8px;
+    background: linear-gradient(178deg, #FFFFFF 0%, #C9CDD3 38%, #7D838C 55%, #F2F4F7 78%, #9AA0A8 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 3px 0 rgba(0,0,0,.6));
+  }
+  .mast .sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: .28em; text-transform: uppercase;
+    color: var(--redline);
+  }
+
+  /* ---------- shared bits ---------- */
+  .lede {
+    font-size: 17px; line-height: 1.45; color: #B9BDC4;
+    text-align: center; margin: 0 auto 26px; max-width: 330px;
+  }
+  .rule { height: 1px; background: linear-gradient(90deg, transparent, #2A2C31, transparent); margin: 26px 0; }
+
+  .btn {
+    display: block; width: 100%; border: 0; cursor: pointer;
+    font-family: 'Anton', sans-serif; font-size: 19px; letter-spacing: .06em;
+    text-transform: uppercase; color: #0A0A0C;
+    background: var(--redline);
+    padding: 17px; border-radius: 3px;
+    transform: skewX(-8deg);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.09), 0 10px 28px rgba(224,27,36,.32);
+    transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+  }
+  .btn span { display: block; transform: skewX(8deg); }
+  .btn:hover { background: #F4232D; box-shadow: 0 0 0 1px rgba(255,255,255,.16), 0 14px 34px rgba(224,27,36,.45); }
+  .btn:active { transform: skewX(-8deg) translateY(2px); }
+  .btn:disabled { background: #2A2C31; color: #6B6F76; box-shadow: none; cursor: not-allowed; }
+  .btn.ghost {
+    background: transparent; color: var(--steel);
+    box-shadow: inset 0 0 0 1px #2A2C31;
+    font-size: 14px; padding: 13px;
+  }
+  .btn.ghost:hover { color: var(--chrome); box-shadow: inset 0 0 0 1px #43474E; }
+
+  :focus-visible { outline: 2px solid var(--nos); outline-offset: 3px; }
+
+  /* ---------- setup rows ---------- */
+  .srow {
+    display: grid; grid-template-columns: 30px 1fr; gap: 12px;
+    align-items: start; padding: 15px 0;
+    border-bottom: 1px solid #1C1E22;
+  }
+  .srow .no {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700;
+    color: var(--steel); padding-top: 3px;
+  }
+  .srow .tt {
+    font-family: 'Anton', sans-serif; font-size: 17px; text-transform: uppercase;
+    letter-spacing: .01em; line-height: 1.1; margin-bottom: 9px;
+  }
+  .srow .yr { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--steel); margin-left: 7px; }
+  .inputs { display: grid; grid-template-columns: 1.35fr 1fr; gap: 8px; }
+  input[type=date], input[type=time] {
+    width: 100%; font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    background: var(--asphalt-2); color: var(--chrome);
+    border: 1px solid #2A2C31; border-radius: 3px; padding: 10px 9px;
+  }
+  input:focus { border-color: var(--nos); outline: none; }
+
+  .sticky {
+    position: sticky; bottom: 0; padding: 16px 0 20px;
+    background: linear-gradient(to top, var(--asphalt) 68%, transparent);
+  }
+  .count {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--steel);
+    text-align: center; margin-bottom: 11px;
+  }
+
+  /* ---------- staging tree lineup ---------- */
+  .lineup { position: relative; padding-left: 26px; }
+  .lineup::before {
+    content: ''; position: absolute; left: 6px; top: 14px; bottom: 14px;
+    width: 2px; background: #1C1E22;
+  }
+  .card {
+    position: relative; width: 100%; text-align: left; cursor: pointer;
+    background: var(--asphalt-2); border: 0; border-left: 3px solid var(--accent, #2A2C31);
+    border-radius: 3px; padding: 15px 16px; margin-bottom: 9px;
+    color: inherit; font-family: inherit;
+    transition: transform .18s cubic-bezier(.3,.9,.4,1), background .18s ease;
+  }
+  .card:hover { transform: translateX(5px); background: #191B1F; }
+  .card:active { transform: translateX(5px) scale(.99); }
+  .bulb {
+    position: absolute; left: -26px; top: 50%; transform: translateY(-50%);
+    width: 11px; height: 11px; border-radius: 50%;
+    background: #1C1E22; box-shadow: inset 0 0 0 1px #2A2C31;
+  }
+  .card.set .bulb { background: var(--amber); box-shadow: 0 0 11px rgba(255,165,31,.65); }
+  .card.done .bulb { background: #1F5233; box-shadow: none; }
+  .card.live .bulb { background: var(--green); box-shadow: 0 0 15px rgba(59,224,122,.9); animation: throb 1.15s ease-in-out infinite; }
+  @keyframes throb { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+
+  .card .no {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;
+    color: var(--accent, #6B6F76); letter-spacing: .1em;
+  }
+  .card .tt {
+    font-family: 'Anton', sans-serif; font-size: 20px; text-transform: uppercase;
+    line-height: 1.02; margin: 4px 0 7px; transform: skewX(-6deg); transform-origin: left;
+  }
+  .card .meta {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--steel);
+  }
+  .card.live .meta { color: var(--green); font-weight: 700; }
+  .card.done { opacity: .42; }
+
+  /* ---------- rev overlay ---------- */
+  #rev {
+    position: fixed; inset: 0; z-index: 60; display: none;
+    background: var(--asphalt); overflow: hidden;
+  }
+  #rev.on { display: block; }
+  .streak {
+    position: absolute; height: 2px; left: -45%; width: 45%;
+    background: linear-gradient(90deg, transparent, var(--sc, #E8E6E1));
+    animation: rip .5s cubic-bezier(.5,0,.3,1) forwards;
+  }
+  @keyframes rip { to { left: 130%; } }
+  .tach {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    font-family: 'JetBrains Mono', monospace; font-weight: 700;
+    font-size: 62px; color: var(--sc, #E8E6E1);
+    text-shadow: 0 0 34px currentColor; letter-spacing: -.03em;
+  }
+
+  /* ---------- title card ---------- */
+  #card { display: none; }
+  #card.on { display: block; animation: slam .34s cubic-bezier(.15,.9,.25,1); }
+  @keyframes slam {
+    from { opacity: 0; transform: translateY(22px) skewX(-3deg); }
+    to { opacity: 1; transform: none; }
+  }
+  .tcard { padding: 30px 0 10px; }
+  .tcard .no {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700;
+    letter-spacing: .3em; color: var(--accent);
+  }
+  .tcard h2 {
+    font-family: 'Anton', sans-serif; font-size: clamp(34px, 11vw, 50px);
+    text-transform: uppercase; line-height: .92; letter-spacing: -.005em;
+    transform: skewX(-8deg); transform-origin: left;
+    margin: 11px 0 12px;
+  }
+  .tcard .when {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--steel);
+  }
+
+  .slab {
+    background: var(--asphalt-2); border-radius: 4px; padding: 20px;
+    margin-top: 20px; border-top: 3px solid var(--accent);
+  }
+  .slab .lbl {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;
+    letter-spacing: .3em; text-transform: uppercase; color: var(--steel);
+    margin-bottom: 10px;
+  }
+  .slab .dress { font-size: 21px; line-height: 1.34; color: var(--chrome); }
+
+  .locked { text-align: center; padding: 34px 20px; }
+  .locked .big {
+    font-family: 'Anton', sans-serif; font-size: 27px; text-transform: uppercase;
+    color: var(--steel); transform: skewX(-8deg); margin-bottom: 9px;
+  }
+  .locked .small { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: .12em; color: #4C5057; }
+
+  .redact { display: grid; gap: 10px; margin-top: 12px; }
+  .bar {
+    height: 15px; border-radius: 2px;
+    background: repeating-linear-gradient(-45deg, #24262B 0 7px, #1A1C20 7px 14px);
+  }
+  .stamp {
+    display: inline-block; margin-top: 13px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;
+    letter-spacing: .24em; text-transform: uppercase;
+    color: var(--redline); border: 1px solid var(--redline);
+    padding: 5px 10px; border-radius: 2px; transform: rotate(-2.5deg);
+  }
+
+  .backrow { margin-top: 26px; display: grid; gap: 9px; }
+
+  .note {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 1.7;
+    letter-spacing: .06em; color: #4C5057; text-align: center; margin-top: 26px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+</style>
+
+<div class="wrap">
+  <div class="mast">
+    <div class="kicker">Eleven Movies · One Ride</div>
+    <h1>Fast<br>Nights</h1>
+    <div class="sub">You Set The Schedule</div>
+  </div>
+
+  <!-- SETUP -->
+  <section id="setup">
+    <p class="lede">Pick a night for each one. Tonight's already handled — the rest is yours. Set them all now or come back and fill them in as you go.</p>
+    <div id="srows"></div>
+    <div class="sticky">
+      <div class="count" id="count"></div>
+      <button class="btn" id="save"><span>Lock it in</span></button>
+    </div>
+  </section>
+
+  <!-- LINEUP -->
+  <section id="lineup" style="display:none">
+    <p class="lede">Tap a night to see what to wear. Everything else stays sealed until you're in it.</p>
+    <div class="lineup" id="cards"></div>
+    <div class="rule"></div>
+    <button class="btn ghost" id="edit"><span>Change the schedule</span></button>
+    <p class="note">Dress code unlocks the morning of.<br>Menu and plan stay classified.</p>
+  </section>
+
+  <!-- TITLE CARD -->
+  <section id="card"></section>
+</div>
+
+<div id="rev"><div class="tach" id="tachNum">0</div></div>
+
+<script>
+const MOVIES = [
+  { n:1,  yr:2001, t:"The Fast<br>and the Furious", flat:"The Fast and the Furious", c:"#E01B24",
+    dress:"Baggy pants and a tight tank top. Letty shades optional." },
+  { n:2,  yr:2003, t:"2 Fast<br>2 Furious", flat:"2 Fast 2 Furious", c:"#2FD4E8",
+    dress:"Miami Beach or Miami nightlife — you choose." },
+  { n:3,  yr:2006, t:"Tokyo<br>Drift", flat:"Tokyo Drift", c:"#FF3EA5",
+    dress:"Gyaru. Pinterest it." },
+  { n:4,  yr:2009, t:"Fast &amp;<br>Furious", flat:"Fast & Furious", c:"#FFA51F",
+    dress:"Bandeau or off-the-shoulder top, and leggings that show off that ass." },
+  { n:5,  yr:2011, t:"Fast<br>Five", flat:"Fast Five", c:"#3BE07A",
+    dress:"Something summery. Bring an appetite." },
+  { n:6,  yr:2013, t:"Fast &amp;<br>Furious 6", flat:"Fast & Furious 6", c:"#8B7BFF",
+    dress:"Leather jacket. Ready to ride." },
+  { n:7,  yr:2015, t:"Furious<br>Seven", flat:"Furious 7", c:"#F2C14E",
+    dress:"The best thing in your closet. Full Abu Dhabi. I'm dressing up too." },
+  { n:8,  yr:2017, t:"The Fate<br>of the Furious", flat:"The Fate of the Furious", c:"#7FE3FF",
+    dress:"All black. Every piece." },
+  { n:9,  yr:2019, t:"Hobbs<br>&amp; Shaw", flat:"Hobbs & Shaw", c:"#FF6B35",
+    dress:"Sexy gym outfit. Baby oil optional." },
+  { n:10, yr:2021, t:"F9", flat:"F9", c:"#5AC8FA",
+    dress:"Backyard cookout. Whatever you'd wear to a barbecue." },
+  { n:11, yr:2023, t:"Fast<br>X", flat:"Fast X", c:"#C1121F",
+    dress:"Fast and Furious, but make it pajamas." }
+];
+
+const KEY = 'ffnights-schedule';
+let sched = {};
+let storageLive = true;
+
+/* ---------- storage ---------- */
+async function load() {
+  try {
+    const r = await window.storage.get(KEY, true);
+    if (r && r.value) sched = JSON.parse(r.value);
+  } catch (e) {
+    // no saved schedule yet, or storage unavailable
+    try { await window.storage.list('', true); } catch (e2) { storageLive = false; }
+  }
+}
+async function save() {
+  try {
+    await window.storage.set(KEY, JSON.stringify(sched), true);
+  } catch (e) { storageLive = false; }
+}
+
+/* ---------- date helpers ---------- */
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function pretty(ds, ts) {
+  if (!ds) return '';
+  const [y,m,d] = ds.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  let s = dt.toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' });
+  if (ts) {
+    const [hh,mm] = ts.split(':').map(Number);
+    const ap = hh >= 12 ? 'pm' : 'am';
+    const h12 = hh % 12 === 0 ? 12 : hh % 12;
+    s += ' · ' + h12 + (mm ? ':' + String(mm).padStart(2,'0') : '') + ap;
+  }
+  return s;
+}
+function state(m) {
+  const e = sched[m.n];
+  if (!e || !e.d) return 'unset';
+  const t = todayStr();
+  if (e.d === t) return 'live';
+  return e.d < t ? 'done' : 'set';
+}
+
+/* ---------- setup screen ---------- */
+function buildSetup() {
+  document.getElementById('srows').innerHTML = MOVIES.map(m => {
+    const e = sched[m.n] || {};
+    return `<div class="srow">
+      <div class="no">${String(m.n).padStart(2,'0')}</div>
+      <div>
+        <div class="tt">${m.flat}<span class="yr">${m.yr}</span></div>
+        <div class="inputs">
+          <input type="date" data-n="${m.n}" data-k="d" value="${e.d||''}" aria-label="Date for ${m.flat}">
+          <input type="time" data-n="${m.n}" data-k="t" value="${e.t||''}" aria-label="Time for ${m.flat}">
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.querySelectorAll('#srows input').forEach(i => {
+    i.addEventListener('change', () => {
+      const n = i.dataset.n;
+      sched[n] = sched[n] || {};
+      sched[n][i.dataset.k] = i.value;
+      tally();
+    });
+  });
+  tally();
+}
+function tally() {
+  const set = MOVIES.filter(m => sched[m.n] && sched[m.n].d).length;
+  document.getElementById('count').textContent = set + ' of 11 nights on the calendar';
+  document.getElementById('save').disabled = set === 0;
+}
+
+/* ---------- lineup screen ---------- */
+function buildLineup() {
+  document.getElementById('cards').innerHTML = MOVIES.map(m => {
+    const st = state(m), e = sched[m.n] || {};
+    const meta = st === 'live' ? '▸ Tonight'
+               : st === 'unset' ? 'No night set'
+               : (st === 'done' ? 'Done · ' : '') + pretty(e.d, e.t);
+    return `<button class="card ${st}" data-n="${m.n}" style="--accent:${m.c}">
+      <span class="bulb"></span>
+      <div class="no">Night ${String(m.n).padStart(2,'0')}</div>
+      <div class="tt">${m.flat}</div>
+      <div class="meta">${meta}</div>
+    </button>`;
+  }).join('');
+
+  document.querySelectorAll('#cards .card').forEach(c => {
+    c.addEventListener('click', () => rev(Number(c.dataset.n)));
+  });
+}
+
+/* ---------- rev animation ---------- */
+function rev(n) {
+  const m = MOVIES.find(x => x.n === n);
+  const ov = document.getElementById('rev');
+  ov.style.setProperty('--sc', m.c);
+  ov.querySelectorAll('.streak').forEach(s => s.remove());
+
+  for (let i = 0; i < 16; i++) {
+    const s = document.createElement('div');
+    s.className = 'streak';
+    s.style.top = (Math.random() * 100) + '%';
+    s.style.animationDelay = (Math.random() * .18) + 's';
+    s.style.opacity = (.25 + Math.random() * .75).toFixed(2);
+    ov.appendChild(s);
+  }
+
+  ov.classList.add('on');
+  const num = document.getElementById('tachNum');
+  const t0 = performance.now(), DUR = 620;
+  (function tick(now) {
+    const p = Math.min((now - t0) / DUR, 1);
+    num.textContent = Math.round(1000 + (8400 - 1000) * (1 - Math.pow(1 - p, 2.4)));
+    if (p < 1) requestAnimationFrame(tick);
+    else setTimeout(() => { ov.classList.remove('on'); showCard(n); }, 130);
+  })(t0);
+}
+
+/* ---------- title card ---------- */
+function showCard(n) {
+  const m = MOVIES.find(x => x.n === n);
+  const st = state(m), e = sched[m.n] || {};
+
+  let body;
+  if (st === 'unset') {
+    body = `<div class="slab"><div class="locked">
+      <div class="big">No night set</div>
+      <div class="small">Pick a date and this one opens up</div>
+    </div></div>`;
+  } else if (st === 'set') {
+    body = `<div class="slab"><div class="locked">
+      <div class="big">Sealed until ${pretty(e.d,'')}</div>
+      <div class="small">Dress code drops that morning</div>
+    </div></div>`;
+  } else {
+    body = `<div class="slab">
+      <div class="lbl">Dress code</div>
+      <div class="dress">${m.dress}</div>
+    </div>`;
+  }
+
+  document.getElementById('card').innerHTML = `
+    <div class="tcard" style="--accent:${m.c}">
+      <div class="no">Night ${String(m.n).padStart(2,'0')} / 11</div>
+      <h2>${m.t}</h2>
+      <div class="when">${e.d ? pretty(e.d, e.t) : 'Unscheduled'} · ${m.yr}</div>
+      ${body}
+      <div class="slab">
+        <div class="lbl">Menu</div>
+        <div class="redact"><div class="bar" style="width:78%"></div><div class="bar" style="width:54%"></div></div>
+        <div class="lbl" style="margin-top:22px">The plan</div>
+        <div class="redact"><div class="bar" style="width:88%"></div><div class="bar" style="width:41%"></div></div>
+        <div class="stamp">Classified · Nate's problem</div>
+      </div>
+      <div class="backrow">
+        <button class="btn ghost" id="back"><span>← Back to the lineup</span></button>
+      </div>
+    </div>`;
+
+  show('card');
+  document.getElementById('back').addEventListener('click', () => { buildLineup(); show('lineup'); });
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+/* ---------- nav ---------- */
+function show(id) {
+  ['setup','lineup','card'].forEach(s => {
+    const el = document.getElementById(s);
+    el.style.display = (s === id) ? 'block' : 'none';
+    el.classList.toggle('on', s === id);
+  });
+}
+
+document.getElementById('save').addEventListener('click', async () => {
+  await save();
+  buildLineup();
+  show('lineup');
+  window.scrollTo({ top: 0, behavior: 'instant' });
+});
+document.getElementById('edit').addEventListener('click', () => {
+  buildSetup(); show('setup'); window.scrollTo({ top: 0, behavior: 'instant' });
+});
+
+/* ---------- boot ---------- */
+(async function init() {
+  await load();
+  if (!sched[1] || !sched[1].d) {
+    sched[1] = { d: todayStr(), t: sched[1] && sched[1].t ? sched[1].t : '19:30' };
+  }
+  const any = MOVIES.some(m => sched[m.n] && sched[m.n].d && m.n !== 1);
+  buildSetup();
+  if (any) { buildLineup(); show('lineup'); } else { show('setup'); }
+  if (!storageLive) {
+    document.querySelector('#lineup .note').innerHTML =
+      "Dress code unlocks the morning of.<br>Menu and plan stay classified.<br><br>Heads up: this browser isn't saving your picks. Screenshot the lineup.";
+  }
+})();
+</script>
