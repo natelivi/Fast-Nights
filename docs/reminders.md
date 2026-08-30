@@ -30,9 +30,10 @@ nights, emails the movie, the time, and that night's dress code. Because it
 reads the artifact at send time, it stays correct when either person moves a
 night — no re-setup.
 
-**Status: created but disabled.** Routine
-`trig_01VK81eDJjCEexkfAE9qk5qU`, "Fast Nights — morning-of reminder
-(needs Gmail attached)", `0 14 * * *` (8:00am Mountain during MDT).
+**Status: created but disabled.** Routine `trig_01VK81eDJjCEexkfAE9qk5qU`,
+"Fast Nights — morning-of reminder (attach Gmail to enable)",
+`0 14 * * *` (8:00am Mountain during MDT). It emails nate@hnlbuild.com and
+Hunterelivingston@gmail.com.
 
 It is disabled because routines created from a Claude Code session cannot
 carry connectors on this account — the sessions it fires get no Gmail tool,
@@ -40,9 +41,10 @@ so it would silently send nothing. Verified by firing it once: no message
 was sent.
 
 To finish it: open Routines on claude.ai, attach the **Gmail** connector to
-that routine, add the second recipient, and re-enable it. If the interface
-will not attach a connector to an existing routine, create a new one on the
-same schedule and paste `docs/reminder-prompt.md` as the prompt.
+that routine and re-enable it. Both recipients are already in the prompt.
+If the interface will not attach a connector to an existing routine, create
+a new one on the same schedule and paste `docs/reminder-prompt.md` as the
+prompt.
 
 ### Daylight saving
 

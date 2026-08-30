@@ -4,7 +4,7 @@ Schedule: `0 14 * * *` (8:00am Mountain while MDT is in effect; see
 `docs/reminders.md` on daylight saving). Fires a fresh session each time.
 Requires the **Gmail** connector.
 
-Replace `SECOND_RECIPIENT` with the other person's address before use.
+Recipients are already set to both people.
 
 ---
 
@@ -27,7 +27,7 @@ If exactly one night matches, go to step 4. If more than one matches (they doubl
 
 STEP 4 — Send exactly one email via the Gmail connector's send_message tool.
 
-to: ["nate@hnlbuild.com", "SECOND_RECIPIENT"]
+to: ["nate@hnlbuild.com", "Hunterelivingston@gmail.com"]
 
 Convert "t" to a 12-hour time like 7:30pm (a "t" of "19:30" is 7:30pm; drop ":00" minutes, so "20:00" is 8pm). If "t" is missing, use 7:30pm.
 
