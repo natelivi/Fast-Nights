@@ -50,3 +50,9 @@ directly, or serve the directory:
 
 Outside the Artifacts runtime `claude.use()` is absent, so the page renders and
 navigates normally but cannot save; the save button says so.
+
+## Getting notified the morning of
+
+See `docs/reminders.md`. Short version: `tools/make-ics.mjs` builds a
+calendar file with an 8:00am alarm on each night, and a Routine can email
+both people that morning once a Gmail connector is attached to it.
