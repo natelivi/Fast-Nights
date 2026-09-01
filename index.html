@@ -1,9 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Fast Nights</title>
+<!-- The dress codes are personal and this page sits on a public URL, so at
+     least keep it out of search results. This is obscurity, not privacy. -->
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏁</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
-<style id="css">
+<style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
@@ -294,22 +303,23 @@
     *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   }
 </style>
+</head>
+<body>
 
 <div id="root"></div>
 <div id="rev"><div class="tach" id="tachNum">0</div></div>
 
-<script type="application/json" id="data">{"rev":1,"updated":"","nights":{"1":{"d":"2026-08-29","t":"19:30"}}}</script>
-
-<script id="app">
+<script>
 (function () {
   'use strict';
 
   /* ------------------------------------------------------------------
-     Fast Nights — an eleven-night watch-along schedule.
+     Fast Nights — an eleven-night watch-along schedule for two people.
 
-     The schedule lives in the #data block of this page. Saving publishes
-     a new version of this same artifact with a new #data block, so both
-     viewers open the same schedule. There is no other store.
+     The schedule lives in Supabase so either person can set it from their
+     own phone and the other just sees it. localStorage is only a cache, so
+     a cold start paints something instantly and a dropped connection does
+     not blank the page; the cloud is the source of truth.
      ------------------------------------------------------------------ */
 
   var MOVIES = [
@@ -337,37 +347,96 @@
       dress:"Fast and Furious, but make it pajamas." }
   ];
 
-  /* ---------- tiny helpers ---------- */
+  /* ---- SHARED STORAGE (Supabase) ------------------------------------
+     Same project as the closet, its own table. The whole schedule is one
+     row — eleven nights is a few hundred bytes, and one row makes a save
+     atomic, so a request that dies midway cannot leave half a schedule.
+     Setup SQL is in supabase/schema.sql. */
+  var SUPABASE_URL = "https://fuyzhjmyulpttqmxovaf.supabase.co";
+  var SUPABASE_KEY = "sb_publishable_0nreLSFDR4YwsVcAp2iKEw_Usm99ARt";
+  var ROW_ID = "main";
+  var CLOUD = !!SUPABASE_URL && !!SUPABASE_KEY;
+
+  /* Publishable keys go on the apikey header only — sent as a Bearer token
+     Supabase tries to parse them as a JWT and rejects them. */
+  var SBH = { apikey: SUPABASE_KEY, "Content-Type": "application/json" };
+
+  function cloudLoad() {
+    return fetch(SUPABASE_URL + "/rest/v1/fast_nights?id=eq." + ROW_ID + "&select=data,updated",
+                 { headers: SBH, cache: "no-store" })
+      .then(function (r) {
+        if (!r.ok) throw new Error("load " + r.status);
+        return r.json();
+      })
+      .then(function (rows) {
+        if (!rows.length) return null;
+        var row = rows[0];
+        return { nights: (row.data && row.data.nights) || {}, updated: row.updated || 0 };
+      });
+  }
+
+  function cloudSave(nights) {
+    var updated = Date.now();
+    var headers = Object.assign({}, SBH, { Prefer: "resolution=merge-duplicates" });
+    return fetch(SUPABASE_URL + "/rest/v1/fast_nights", {
+      method: "POST", headers: headers,
+      body: JSON.stringify([{ id: ROW_ID, data: { nights: nights }, updated: updated }])
+    }).then(function (r) {
+      if (!r.ok) throw new Error("save " + r.status);
+      return updated;
+    });
+  }
+
+  /* ---- local cache ---- */
+  var CACHE_KEY = "fastnights:v1";
+  function cacheLoad() {
+    try { var raw = localStorage.getItem(CACHE_KEY); return raw ? JSON.parse(raw) : null; }
+    catch (e) { return null; }
+  }
+  function cacheSave(st) {
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(st)); } catch (e) { /* private mode */ }
+  }
+
+  /* ---- tiny helpers ---- */
   function $(id) { return document.getElementById(id); }
   var ENT = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return ENT[c]; }); }
   function pad(n) { return String(n).padStart(2, '0'); }
   function titleHtml(t) { return esc(t).replace(/\n/g, '<br>'); }
 
-  /* ---------- state ---------- */
-  var ST;
-  try { ST = JSON.parse($('data').textContent); } catch (e) { ST = null; }
-  if (!ST || typeof ST !== 'object') ST = {};
-  if (!ST.nights || typeof ST.nights !== 'object') ST.nights = {};
-  if (!ST.rev) ST.rev = 1;
+  /* Canonical form: nights in order, only the ones with a date, times
+     defaulted. Comparing these is how "unsaved" is decided, so adding
+     nights out of order does not read as a change. It is also exactly what
+     goes to the cloud, which keeps the stored row tidy. */
+  function canon(nights) {
+    var out = {};
+    Object.keys(nights || {}).map(Number)
+      .filter(function (k) { return k >= 1 && k <= 11; })
+      .sort(function (a, b) { return a - b; })
+      .forEach(function (k) {
+        var e = nights[k] || nights[String(k)];
+        if (e && e.d) out[k] = { d: e.d, t: e.t || '19:30' };
+      });
+    return out;
+  }
+  function same(a, b) { return JSON.stringify(canon(a)) === JSON.stringify(canon(b)); }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
 
-  var draft = JSON.parse(JSON.stringify(ST.nights));
-  try {
-    var stash = sessionStorage.getItem('fn-draft');
-    if (stash) draft = JSON.parse(stash);
-  } catch (e) { /* private mode, or nothing stashed */ }
+  /* ---- state ---- */
+  var SEED = { nights: { 1: { d: '2026-08-29', t: '19:30' } }, updated: 0 };
+  var ST = cacheLoad() || SEED;
+  if (!ST.nights) ST.nights = {};
+  var draft = clone(ST.nights);
 
-  var view = 'lineup';
-  var cardN = null;
+  var view = 'lineup', cardN = null;
   var busy = false;
-  var artifactCap = null;
-  var readOnly = false;
+  var sync = CLOUD ? 'syncing' : 'local';   // syncing | ok | offline | saving | local
+  var theirsAhead = null;                   // their schedule, when it landed mid-edit
 
-  function dirty() { return JSON.stringify(draft) !== JSON.stringify(ST.nights); }
-  function setCount() { return MOVIES.filter(function (m) { return dated(draft, m.n); }).length; }
-  function dated(src, n) { var e = src[n]; return !!(e && e.d); }
+  function dirty() { return !same(draft, ST.nights); }
+  function setCount() { return Object.keys(canon(draft)).length; }
 
-  /* ---------- dates ---------- */
+  /* ---- dates ---- */
   function todayStr() {
     var d = new Date();
     return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
@@ -403,79 +472,68 @@
     return best;
   }
   function savedAgo() {
-    if (!ST.updated) return '';
-    var d = new Date(ST.updated);
-    if (isNaN(d)) return '';
-    var mins = Math.round((Date.now() - d.getTime()) / 60000);
+    // Guard against a junk timestamp in the row rendering as 1970.
+    if (!ST.updated || ST.updated < 15778e8) return '';
+    var mins = Math.round((Date.now() - ST.updated) / 60000);
     if (mins < 1) return 'just now';
     if (mins < 60) return mins + 'm ago';
     if (mins < 48 * 60) return Math.round(mins / 60) + 'h ago';
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    return new Date(ST.updated).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   }
 
-  /* ---------- capability ---------- */
-  function use(name) {
-    try {
-      if (!window.claude || typeof window.claude.use !== 'function') return Promise.resolve(null);
-      return Promise.resolve(window.claude.use(name)).catch(function () { return null; });
-    } catch (e) { return Promise.resolve(null); }
-  }
-  use('artifact').then(function (a) { artifactCap = a; render(); });
-
-  /* ---------- rebuild this page with new data ---------- */
-  var HEAD_OPEN = '<!doctype html>\n<html lang="en">\n<head>\n' +
-    '<meta charset="utf-8">\n' +
-    '<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
-    '<title>Fast Nights</title>\n' +
-    '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
-    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
-    '<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">\n' +
-    '<style id="css">';
-  var HEAD_CLOSE = '</style>\n</head>\n<body>\n' +
-    '<div id="root"></div>\n' +
-    '<div id="rev"><div class="tach" id="tachNum">0</div></div>\n';
-
-  function buildDoc(nights, rev) {
-    var payload = { rev: rev, updated: new Date().toISOString(), nights: nights };
-    var json = JSON.stringify(payload).replace(/</g, '\\u003c');
-    return HEAD_OPEN + $('css').textContent + HEAD_CLOSE +
-      '<script type="application/json" id="data">' + json + '<\/script>\n' +
-      '<script id="app">' + $('app').textContent + '<\/script>\n' +
-      '</body>\n</html>\n';
+  /* ---- sync ---- */
+  function refresh(initial) {
+    if (!CLOUD || busy) return Promise.resolve();
+    return cloudLoad().then(function (remote) {
+      sync = 'ok';
+      if (!remote) return;                       // table is empty; first save creates the row
+      if (!initial && remote.updated <= ST.updated) return;
+      if (initial || !dirty()) {
+        ST = remote;
+        cacheSave(ST);
+        draft = clone(ST.nights);
+        theirsAhead = null;
+      } else if (!same(remote.nights, draft)) {
+        // They saved while this person was mid-edit. Never silently discard
+        // either side — show both and let them choose.
+        theirsAhead = remote;
+      }
+    }).catch(function () {
+      sync = 'offline';
+    }).then(function () { render(); });
   }
 
   function save() {
     if (busy) return;
-    if (!artifactCap) {
-      toast('This copy can’t save. Open Fast Nights from the shared link.', 'bad');
-      return;
-    }
-    busy = true; render();
-    try { sessionStorage.setItem('fn-draft', JSON.stringify(draft)); } catch (e) {}
-    artifactCap.publish(buildDoc(draft, (ST.rev || 1) + 1)).then(function () {
-      try { sessionStorage.removeItem('fn-draft'); } catch (e) {}
-      toast('Saved. Everyone on this link sees it now.', 'ok');
-    }, function (err) {
-      busy = false;
-      var code = err && err.code;
-      if (code === 'conflict') {
-        toast('Someone saved first — loading their version.');
-        return;
-      }
-      if (code === 'not_writer' || code === 'not_granted' || code === 'consent_required' ||
-          code === 'not_declared' || code === 'capability_disabled' || code === 'capability_removed') {
-        readOnly = true; render();
-        toast('You have view-only access, so nothing was saved. Ask Nate to share this with edit access.', 'bad');
-        return;
-      }
-      if (code === 'too_large') { toast('The page is too big to save.', 'bad'); render(); return; }
-      if (code === 'rate_limited') { toast('Saving too fast. Wait a few seconds, then save again.', 'bad'); render(); return; }
-      toast('The save didn’t go through. Try again.', 'bad');
-      render();
-    });
+    if (!CLOUD) { toast('No cloud configured, so nothing was saved.', 'bad'); return; }
+    busy = true; sync = 'saving'; render();
+    var payload = canon(draft);
+    cloudSave(payload).then(function (updated) {
+      ST = { nights: payload, updated: updated };
+      draft = clone(payload);
+      cacheSave(ST);
+      theirsAhead = null;
+      sync = 'ok';
+      toast('Saved. Hunter sees this too.', 'ok');
+      if (view === 'setup') view = 'lineup';
+    }).catch(function () {
+      sync = 'offline';
+      toast('Could not reach the schedule. Your picks are still here — try again.', 'bad');
+    }).then(function () { busy = false; render(); });
   }
 
-  /* ---------- toast ---------- */
+  function takeTheirs() {
+    if (!theirsAhead) return;
+    ST = theirsAhead;
+    draft = clone(ST.nights);
+    cacheSave(ST);
+    theirsAhead = null;
+    sync = 'ok';
+    render();
+    toast('Loaded their schedule.', 'ok');
+  }
+
+  /* ---- toast ---- */
   var toastTimer = null;
   function toast(msg, kind) {
     var old = document.querySelector('.toast');
@@ -489,13 +547,44 @@
     toastTimer = setTimeout(function () { el.remove(); }, 5200);
   }
 
-  /* ---------- views ---------- */
+  /* ---- views ---- */
   function mast() {
     return '<div class="mast">' +
       '<div class="kicker">Eleven Movies · One Ride</div>' +
       '<h1>Fast<br>Nights</h1>' +
       '<div class="sub">You Set The Schedule</div>' +
       '</div>';
+  }
+
+  function chip() {
+    if (!CLOUD)             return '<span class="chip">Local only</span>';
+    if (sync === 'saving')  return '<span class="chip warn">Saving…</span>';
+    if (sync === 'syncing') return '<span class="chip">Syncing…</span>';
+    if (sync === 'offline') return '<span class="chip bad">Offline</span>';
+    if (dirty())            return '<span class="chip warn">Unsaved</span>';
+    return '<span class="chip ok">Saved' + (savedAgo() ? ' · ' + esc(savedAgo()) : '') + '</span>';
+  }
+
+  function banner(head, body, kind, btnId, btnText) {
+    return '<div class="banner' + (kind ? ' ' + kind : '') + '">' +
+      '<div class="bh">' + esc(head) + '</div><p>' + esc(body) + '</p>' +
+      (btnId ? '<button class="btn ghost" id="' + btnId + '" style="margin-top:11px"><span>' +
+        esc(btnText) + '</span></button>' : '') +
+      '</div>';
+  }
+
+  function conflictBanner() {
+    if (!theirsAhead) return '';
+    return banner('They changed the schedule',
+      'Someone saved a different schedule while you were editing. Saving now replaces theirs with yours.',
+      'bad', 'taketheirs', 'Load theirs instead');
+  }
+
+  function offlineBanner() {
+    if (sync !== 'offline') return '';
+    return banner('Not connected',
+      'Showing the last schedule this phone saw. Changes will not reach the other person until it reconnects.',
+      'bad');
   }
 
   function setupView() {
@@ -513,23 +602,17 @@
       '</div>';
     }).join('');
 
-    var n = setCount();
     return '<section>' +
       '<p class="lede">Pick a night for each one. Set them all now or come back and fill them in as you go — whatever you save here is what the other person opens.</p>' +
-      (readOnly ? banner('View only', 'You can look but not save. Ask Nate to re-share this page with edit access.', true) : '') +
+      conflictBanner() + offlineBanner() +
       '<div id="srows">' + rows + '</div>' +
       '<div class="sticky">' +
-        '<div class="count">' + n + ' of 11 nights on the calendar</div>' +
-        '<button class="btn" id="save"' + (busy || readOnly ? ' disabled' : '') + '><span>' +
+        '<div class="count">' + setCount() + ' of 11 nights on the calendar</div>' +
+        '<button class="btn" id="save"' + (busy ? ' disabled' : '') + '><span>' +
           (busy ? 'Saving…' : 'Lock it in') + '</span></button>' +
         '<button class="btn ghost" id="tolineup"><span>See the lineup</span></button>' +
       '</div>' +
     '</section>';
-  }
-
-  function banner(head, body, bad) {
-    return '<div class="banner' + (bad ? ' bad' : '') + '">' +
-      '<div class="bh">' + esc(head) + '</div><p>' + esc(body) + '</p></div>';
   }
 
   function lineupView() {
@@ -547,24 +630,25 @@
     }).join('');
 
     var up = nextUp();
-    var set = MOVIES.filter(function (m) { return dated(draft, m.n); }).length;
     var upTxt = up
       ? (nightState(up.n) === 'live'
           ? 'Tonight · <b>Night ' + pad(up.n) + '</b>'
           : 'Next · <b>Night ' + pad(up.n) + '</b> · ' + esc(pretty(draft[up.n].d, '')))
       : 'No nights left on the calendar';
-    var chip = readOnly ? '<span class="chip">View only</span>'
-             : dirty() ? '<span class="chip warn">Unsaved</span>'
-             : '<span class="chip ok">Saved' + (savedAgo() ? ' · ' + esc(savedAgo()) : '') + '</span>';
 
     return '<section>' +
-      '<div class="strip"><span class="up">' + upTxt + '</span>' + chip + '</div>' +
-      (dirty() && !readOnly ? banner('Unsaved changes', 'You changed the schedule but haven’t saved it, so nobody else can see it yet.') : '') +
+      '<div class="strip"><span class="up">' + upTxt + '</span>' + chip() + '</div>' +
+      conflictBanner() + offlineBanner() +
+      (dirty() && !theirsAhead ? banner('Unsaved changes',
+        'You changed the schedule but have not saved it, so nobody else can see it yet.') : '') +
       '<p class="lede">Tap a night to see what to wear. Everything else stays sealed until you’re in it.</p>' +
       '<div class="lineup">' + cards + '</div>' +
       '<div class="rule"></div>' +
       '<div class="backrow">' +
-        '<button class="btn ghost" id="edit"><span>' + (set > 1 ? 'Change the schedule' : 'Set the schedule') + '</span></button>' +
+        (dirty() ? '<button class="btn" id="save"' + (busy ? ' disabled' : '') + '><span>' +
+          (busy ? 'Saving…' : 'Save the schedule') + '</span></button>' : '') +
+        '<button class="btn ghost" id="edit"><span>' +
+          (setCount() > 1 ? 'Change the schedule' : 'Set the schedule') + '</span></button>' +
       '</div>' +
       '<p class="note">Dress code unlocks the morning of.<br>Menu and plan stay classified.</p>' +
     '</section>';
@@ -607,7 +691,7 @@
     '</section>';
   }
 
-  /* ---------- render + wiring ---------- */
+  /* ---- render + wiring ---- */
   function render() {
     var html = mast();
     if (view === 'setup') html += setupView();
@@ -619,10 +703,11 @@
 
   function wire() {
     var el;
-    if ((el = $('save'))) el.addEventListener('click', save);
-    if ((el = $('tolineup'))) el.addEventListener('click', function () { go('lineup'); });
-    if ((el = $("edit"))) el.addEventListener("click", function () { go("setup"); });
-    if ((el = $('back'))) el.addEventListener('click', function () { go('lineup'); });
+    if ((el = $('save')))       el.addEventListener('click', save);
+    if ((el = $('taketheirs'))) el.addEventListener('click', takeTheirs);
+    if ((el = $('tolineup')))   el.addEventListener('click', function () { go('lineup'); });
+    if ((el = $('edit')))       el.addEventListener('click', function () { go('setup'); });
+    if ((el = $('back')))       el.addEventListener('click', function () { go('lineup'); });
 
     Array.prototype.forEach.call(document.querySelectorAll('#srows input'), function (i) {
       i.addEventListener('change', function () {
@@ -647,7 +732,7 @@
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
-  /* ---------- rev animation ---------- */
+  /* ---- rev animation ---- */
   function rev(n) {
     var m = MOVIES.filter(function (x) { return x.n === n; })[0];
     var ov = $('rev');
@@ -676,8 +761,22 @@
     })(t0);
   }
 
-  /* ---------- boot ---------- */
-  view = MOVIES.filter(function (m) { return dated(draft, m.n); }).length > 1 ? "lineup" : "setup";
+  /* ---- boot ---- */
+  view = setCount() > 1 ? 'lineup' : 'setup';
   render();
+  refresh(true).then(function () {
+    if (view === 'setup' && setCount() > 1) go('lineup');
+  });
+
+  // Pick up the other person's saves without needing a reload.
+  setInterval(function () {
+    if (document.visibilityState === 'visible') refresh(false);
+  }, 20000);
+  window.addEventListener('focus', function () { refresh(false); });
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') refresh(false);
+  });
 })();
 </script>
+</body>
+</html>

@@ -1,58 +1,73 @@
 # Fast Nights
 
-An eleven-night Fast & Furious watch-along schedule, as a single self-contained
-HTML page. Published as a Claude Artifact:
+An eleven-night Fast & Furious watch-along schedule for two people, as a
+single self-contained HTML page with a shared cloud schedule.
 
-    https://claude.ai/code/artifact/0ca6b614-c2be-4aa6-90f5-cc5e373b4b39
+**Live:** https://natelivi.github.io/Fast-Nights/
 
 ## What it does
 
-- **Setup** — pick a date and time for each of the eleven movies, all at once or
-  a few at a time. Night 01 is seeded as already watched.
-- **Lineup** — a staging-tree view of all eleven nights, with a next-up strip
-  across the top. Bulbs read amber for scheduled, green and throbbing for
-  tonight, dim for nights already watched.
+- **Setup** — pick a date and time for each of the eleven movies, all at once
+  or a few at a time. Either person can set them from their own phone.
+- **Lineup** — a staging-tree view of all eleven nights with a next-up strip.
+  Bulbs read amber for scheduled, green and throbbing for tonight, dim for
+  nights already watched.
 - **Title card** — tap a night for a rev-limiter transition into its card. The
   dress code unlocks the morning of; menu and plan stay redacted.
 
 ## How the schedule is shared
 
-The schedule is not in browser storage — it is *in the page*, as a JSON block:
+The schedule lives in Supabase, in the same project as the closet, in its own
+`fast_nights` table. The whole schedule is **one row** — eleven nights is a few
+hundred bytes, and one row makes a save atomic, so a request that dies midway
+cannot leave half a schedule behind.
 
-    <script type="application/json" id="data">{"rev":1,...}</script>
+The page talks to Supabase's REST API directly, no SDK, the same way Sand and
+Saddle does. The publishable key goes on the `apikey` header only; sent as a
+Bearer token, Supabase tries to parse it as a JWT and rejects it.
 
-Saving calls `artifact.publish()` with a complete rebuilt copy of this document
-carrying a new `#data` block, so the schedule becomes the page itself. Every
-open view reloads to it. Whoever opens the artifact link sees the same dates,
-and either person can set them.
+`localStorage` is only a cache, so a cold start paints instantly and a dropped
+connection does not blank the page. **The cloud is the source of truth** — a
+cache miss costs a fetch, never data.
 
-The page rebuilds itself by reading the text of its own `<style id="css">` and
-`<script id="app">` elements and re-emitting them around fresh data — never by
-serializing the live DOM, which would capture viewer state and injected runtime
-scripts. That round trip is lossless and stable across generations.
+### Staying in sync
 
-Writing requires edit access to the artifact. A read-only viewer can change the
-inputs but `publish` rejects with `not_writer`; the page catches that and says
-the view is read-only rather than failing silently.
+The page re-reads the schedule every 20 seconds while visible, and whenever
+the tab regains focus, so one person's save shows up on the other's phone
+without a reload.
 
-## Working state vs. saved state
+If someone saves while you have unsaved edits, neither side is silently
+dropped: a banner says the schedule changed and offers **Load theirs**.
+Saving without taking that offer replaces theirs with yours, which is the
+right call for two people who can just talk to each other.
 
-The lineup and title cards render the *working* schedule, so picks stay visible
-before they are saved. The strip's chip carries the distinction — `Saved`
-against `Unsaved` — and a banner appears while changes are unpublished.
+## Setup
 
-## Running it locally
+**Supabase** — run `supabase/schema.sql` once in the SQL editor. It creates
+the table, opens the row-level-security policies, and seeds Night 01.
 
-`index.html` has no build step and no dependencies beyond Google Fonts. Open it
-directly, or serve the directory:
+**Hosting** — GitHub Pages, from `main`, root directory. There is no build
+step; `index.html` is the whole app.
 
-    python3 -m http.server 8000
+## A note on privacy
 
-Outside the Artifacts runtime `claude.use()` is absent, so the page renders and
-navigates normally but cannot save; the save button says so.
+The page sits at a public URL and the repository is public, so the dress codes
+are readable by anyone who has the link or browses the repo. `<meta
+name="robots" content="noindex">` keeps it out of search results, but that is
+obscurity, not privacy. The RLS policies let anyone with the URL read and
+rewrite the schedule too — fine for a movie schedule, but worth knowing.
+
+Making the repository private would take the dress codes out of public view;
+GitHub Pages on a private repo needs a paid plan, so the page would need
+another host.
 
 ## Getting notified the morning of
 
-See `docs/reminders.md`. Short version: `tools/make-ics.mjs` builds a
-calendar file with an 8:00am alarm on each night, and a Routine can email
-both people that morning once a Gmail connector is attached to it.
+See `docs/reminders.md`.
+
+## Running it locally
+
+    python3 -m http.server 8000
+
+It talks to the same Supabase table as the deployed page, so local edits are
+real edits.

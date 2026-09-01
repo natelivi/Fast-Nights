@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// Build fast-nights.ics from the schedule stored in the Fast Nights page.
+// Build fast-nights.ics from the shared schedule.
 //
-//   node tools/make-ics.mjs <page.html|schedule.json> [out.ics]
+//   node tools/make-ics.mjs [out.ics]              # live, from Supabase
+//   node tools/make-ics.mjs schedule.json [out.ics]  # from a saved copy
 //
-// Input is either a saved copy of the artifact's HTML (the file an
-// `Artifact` read writes out) or a bare JSON schedule of the same shape:
-//   {"rev":2,"nights":{"4":{"d":"2026-09-19","t":"20:00"}}}
+// A JSON file, if given, is the same shape the page stores:
+//   {"nights":{"4":{"d":"2026-09-19","t":"20:00"}}}
 //
 // Each scheduled night becomes one event with two alarms: 8:00am that
 // morning, when the dress code unlocks, and one hour before showtime.
@@ -14,7 +14,9 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 
-const LINEUP_URL = 'https://claude.ai/code/artifact/0ca6b614-c2be-4aa6-90f5-cc5e373b4b39';
+const LINEUP_URL   = 'https://natelivi.github.io/Fast-Nights/';
+const SUPABASE_URL = 'https://fuyzhjmyulpttqmxovaf.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_0nreLSFDR4YwsVcAp2iKEw_Usm99ARt';
 
 const MOVIES = [
   [1, 2001, 'The Fast and the Furious'], [2, 2003, '2 Fast 2 Furious'],
@@ -25,26 +27,40 @@ const MOVIES = [
   [11, 2023, 'Fast X'],
 ];
 
-const [, , src, dest = 'fast-nights.ics'] = process.argv;
-if (!src) {
-  console.error('usage: node tools/make-ics.mjs <page.html|schedule.json> [out.ics]');
-  process.exit(2);
+// A first argument ending in .json is a saved schedule; otherwise everything
+// is an output path and the schedule comes from the cloud.
+const argv = process.argv.slice(2);
+const src = argv[0] && argv[0].endsWith('.json') ? argv.shift() : null;
+const dest = argv[0] || 'fast-nights.ics';
+
+async function fetchSchedule() {
+  const r = await fetch(
+    `${SUPABASE_URL}/rest/v1/fast_nights?id=eq.main&select=data,updated`,
+    { headers: { apikey: SUPABASE_KEY } },
+  );
+  if (!r.ok) throw new Error(`Supabase answered ${r.status}`);
+  const rows = await r.json();
+  if (!rows.length) throw new Error('No schedule row yet — save one from the page first.');
+  return rows[0].data || {};
 }
 
-const raw = readFileSync(src, 'utf8');
 let data;
-if (src.endsWith('.json')) {
-  data = JSON.parse(raw);
+if (src) {
+  data = JSON.parse(readFileSync(src, 'utf8'));
 } else {
-  // The page's own JavaScript contains a lookalike of this tag; the real
-  // data block is the first one in the document.
-  const m = raw.match(/<script type="application\/json" id="data">([\s\S]*?)<\/script>/);
-  if (!m) { console.error('No schedule block found in ' + src); process.exit(1); }
-  data = JSON.parse(m[1]);
+  try {
+    data = await fetchSchedule();
+  } catch (err) {
+    console.error(`Could not read the schedule: ${err.message}`);
+    process.exit(1);
+  }
 }
 
 const nights = data.nights || {};
-const seq = data.rev || 1;
+// SEQUENCE must rise whenever an event changes for a re-import to update
+// rather than duplicate. The save timestamp does that, in minutes so it
+// stays inside the 32-bit range calendars expect.
+const seq = Math.floor((data.updated || Date.now()) / 60000);
 const pad = (n) => String(n).padStart(2, '0');
 const esc = (s) => String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
 

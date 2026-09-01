@@ -2,20 +2,21 @@
 
 Schedule: `0 14 * * *` (8:00am Mountain while MDT is in effect; see
 `docs/reminders.md` on daylight saving). Fires a fresh session each time.
-Requires the **Gmail** connector.
-
-Recipients are already set to both people.
+Requires the **Gmail** connector. Recipients are already set to both people.
 
 ---
 
 Send the Fast Nights morning-of reminder. Run this end to end on your own — nobody is watching this session, so never stop to ask a question.
 
 STEP 1 — Read the live schedule.
-Call the Artifact tool with action "read" and url "https://claude.ai/code/artifact/0ca6b614-c2be-4aa6-90f5-cc5e373b4b39". The result saves the full page HTML to a local file and names the path. In that file, find the FIRST occurrence of `<script type="application/json" id="data">` and parse the JSON between it and the next `</script>`. A second, similar-looking string appears later inside the page's own JavaScript source — ignore it; only the first is real data.
+Run this in Bash:
 
-The JSON looks like:
-  {"rev":2,"updated":"2026-08-30T19:04:11.123Z","nights":{"1":{"d":"2026-08-29","t":"19:30"},"5":{"d":"2026-09-19","t":"20:00"}}}
-Each key of "nights" is a night number from 1 to 11. "d" is the date as YYYY-MM-DD and "t" is a 24-hour time. Nights with no date are simply absent.
+  curl -s "https://fuyzhjmyulpttqmxovaf.supabase.co/rest/v1/fast_nights?id=eq.main&select=data,updated" -H "apikey: sb_publishable_0nreLSFDR4YwsVcAp2iKEw_Usm99ARt"
+
+It returns a JSON array holding one row, shaped like:
+  [{"data":{"nights":{"1":{"d":"2026-08-29","t":"19:30"},"5":{"d":"2026-09-19","t":"20:00"}}},"updated":1788110000000}]
+
+Each key of "nights" is a night number from 1 to 11. "d" is the date as YYYY-MM-DD and "t" is a 24-hour time. Nights with no date are simply absent. If the request fails or returns an empty array, send no email and say what happened.
 
 STEP 2 — Get today's date in Mountain Time.
 Run `TZ=America/Denver date +%F` in Bash. Do not assume this session's own clock is Mountain Time.
@@ -44,7 +45,7 @@ body (plain text, exactly this shape):
   Bandeau or off-the-shoulder top, and leggings that show off that ass.
 
   Menu and the plan stay classified.
-  The lineup: https://claude.ai/code/artifact/0ca6b614-c2be-4aa6-90f5-cc5e373b4b39
+  The lineup: https://natelivi.github.io/Fast-Nights/
 
 Also send an htmlBody with the same content: a dark background (#0A0A0C), off-white text (#E8E6E1), the night number small and in grey (#6B6F76), the movie title large and bold, and the DRESS CODE label in red (#E01B24) above the dress code text. Keep it to one simple centered column, no images.
 
@@ -62,4 +63,4 @@ THE ELEVEN NIGHTS — title, year, and dress code, by night number. Use these ve
   11 · Fast X (2023) — Fast and Furious, but make it pajamas.
 
 STEP 5 — Report.
-End the turn with one line: who the email went to and which night it covered. If the artifact read failed or the JSON would not parse, send no email and say exactly what broke.
+End the turn with one line: who the email went to and which night it covered. If the schedule could not be read, send no email and say exactly what broke.
