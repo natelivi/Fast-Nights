@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fast Nights</title>
+<!-- The dress codes are personal and this page sits on a public URL, so at
+     least keep it out of search results. This is obscurity, not privacy. -->
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏁</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    color-scheme: dark;
+    --asphalt: #0A0A0C;
+    --asphalt-2: #131417;
+    --track: #1C1E22;
+    --rail: #2A2C31;
+    --steel: #6B6F76;
+    --chrome: #E8E6E1;
+    --redline: #E01B24;
+    --nos: #2FD4E8;
+    --amber: #FFA51F;
+    --green: #3BE07A;
+  }
+
+  html, body {
+    background: var(--asphalt);
+    color: var(--chrome);
+    font-family: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  body {
+    min-height: 100vh;
+    background-image:
+      repeating-linear-gradient(90deg, transparent 0 2px, rgba(255,255,255,.014) 2px 3px),
+      radial-gradient(120% 60% at 50% 0%, rgba(224,27,36,.10), transparent 60%);
+  }
+
+  .wrap { max-width: 480px; margin: 0 auto; padding: 0 18px 64px; }
+
+  /* ---------- masthead ---------- */
+  .mast { padding: 34px 0 20px; text-align: center; }
+  .mast .kicker {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: .34em; text-transform: uppercase;
+    color: var(--steel);
+  }
+  .mast h1 {
+    font-family: 'Anton', Impact, sans-serif;
+    font-size: clamp(38px, 13vw, 58px);
+    line-height: .86; letter-spacing: -.01em;
+    text-transform: uppercase;
+    transform: skewX(-8deg);
+    margin: 10px 0 8px;
+    background: linear-gradient(178deg, #FFFFFF 0%, #C9CDD3 38%, #7D838C 55%, #F2F4F7 78%, #9AA0A8 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 3px 0 rgba(0,0,0,.6));
+  }
+  .mast .sub {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: .28em; text-transform: uppercase;
+    color: var(--redline);
+  }
+
+  /* ---------- shared bits ---------- */
+  .lede {
+    font-size: 17px; line-height: 1.45; color: #B9BDC4;
+    text-align: center; margin: 0 auto 22px; max-width: 340px;
+    text-wrap: pretty;
+  }
+  .rule { height: 1px; background: linear-gradient(90deg, transparent, var(--rail), transparent); margin: 26px 0; }
+
+  .btn {
+    display: block; width: 100%; border: 0; cursor: pointer;
+    font-family: 'Anton', Impact, sans-serif; font-size: 19px; letter-spacing: .06em;
+    text-transform: uppercase; color: #0A0A0C;
+    background: var(--redline);
+    padding: 17px; border-radius: 3px;
+    transform: skewX(-8deg);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.09), 0 10px 28px rgba(224,27,36,.32);
+    transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+  }
+  .btn span { display: block; transform: skewX(8deg); }
+  .btn:hover { background: #F4232D; box-shadow: 0 0 0 1px rgba(255,255,255,.16), 0 14px 34px rgba(224,27,36,.45); }
+  .btn:active { transform: skewX(-8deg) translateY(2px); }
+  .btn:disabled { background: var(--rail); color: var(--steel); box-shadow: none; cursor: not-allowed; }
+  .btn.ghost {
+    background: transparent; color: var(--steel);
+    box-shadow: inset 0 0 0 1px var(--rail);
+    font-size: 14px; padding: 13px;
+  }
+  .btn.ghost:hover { color: var(--chrome); box-shadow: inset 0 0 0 1px #43474E; background: transparent; }
+  .btn.ghost:disabled { color: #3A3D43; box-shadow: inset 0 0 0 1px var(--track); }
+
+  :focus-visible { outline: 2px solid var(--nos); outline-offset: 3px; }
+
+  /* ---------- status strip ---------- */
+  .strip {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px;
+    letter-spacing: .16em; text-transform: uppercase;
+    border-top: 1px solid var(--track); border-bottom: 1px solid var(--track);
+    padding: 9px 0; margin-bottom: 20px; color: var(--steel);
+  }
+  .strip .up { color: var(--chrome); }
+  .strip .up b { color: var(--amber); font-weight: 700; }
+  .chip {
+    flex: none; padding: 3px 7px; border-radius: 2px;
+    border: 1px solid var(--rail); color: var(--steel);
+    font-size: 9px; letter-spacing: .14em;
+  }
+  .chip.ok { color: var(--green); border-color: rgba(59,224,122,.4); }
+  .chip.warn { color: var(--amber); border-color: rgba(255,165,31,.45); }
+  .chip.bad { color: var(--redline); border-color: rgba(224,27,36,.5); }
+
+  .banner {
+    border: 1px solid var(--rail); border-left: 3px solid var(--amber);
+    background: var(--asphalt-2); border-radius: 3px;
+    padding: 13px 14px; margin-bottom: 18px;
+  }
+  .banner .bh {
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px; font-weight: 700;
+    letter-spacing: .22em; text-transform: uppercase; color: var(--amber); margin-bottom: 6px;
+  }
+  .banner p { font-size: 15px; line-height: 1.4; color: #B9BDC4; }
+  .banner.bad { border-left-color: var(--redline); }
+  .banner.bad .bh { color: var(--redline); }
+
+  /* ---------- setup rows ---------- */
+  .srow {
+    display: grid; grid-template-columns: 30px 1fr; gap: 12px;
+    align-items: start; padding: 15px 0;
+    border-bottom: 1px solid var(--track);
+  }
+  .srow .no {
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; font-weight: 700;
+    color: var(--steel); padding-top: 3px;
+  }
+  .srow .tt {
+    font-family: 'Anton', Impact, sans-serif; font-size: 17px; text-transform: uppercase;
+    letter-spacing: .01em; line-height: 1.1; margin-bottom: 9px;
+  }
+  .srow .yr { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: var(--steel); margin-left: 7px; }
+  .inputs { display: grid; grid-template-columns: 1.35fr 1fr; gap: 8px; }
+  input[type=date], input[type=time] {
+    width: 100%; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px;
+    background: var(--asphalt-2); color: var(--chrome);
+    border: 1px solid var(--rail); border-radius: 3px; padding: 10px 9px;
+  }
+  input:focus { border-color: var(--nos); outline: none; }
+
+  .sticky {
+    position: sticky; bottom: 0; padding: 16px 0 20px;
+    background: linear-gradient(to top, var(--asphalt) 68%, transparent);
+    display: grid; gap: 9px;
+  }
+  .count {
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--steel);
+    text-align: center;
+  }
+
+  /* ---------- staging tree lineup ---------- */
+  .lineup { position: relative; padding-left: 26px; }
+  .lineup::before {
+    content: ''; position: absolute; left: 6px; top: 14px; bottom: 14px;
+    width: 2px; background: var(--track);
+  }
+  .card {
+    position: relative; width: 100%; text-align: left; cursor: pointer;
+    background: var(--asphalt-2); border: 0; border-left: 3px solid var(--accent, #2A2C31);
+    border-radius: 3px; padding: 15px 16px; margin-bottom: 9px;
+    color: inherit; font-family: inherit;
+    transition: transform .18s cubic-bezier(.3,.9,.4,1), background .18s ease;
+  }
+  .card:hover { transform: translateX(5px); background: #191B1F; }
+  .card:active { transform: translateX(5px) scale(.99); }
+  .bulb {
+    position: absolute; left: -26px; top: 50%; transform: translateY(-50%);
+    width: 11px; height: 11px; border-radius: 50%;
+    background: var(--track); box-shadow: inset 0 0 0 1px var(--rail);
+  }
+  .card.set .bulb { background: var(--amber); box-shadow: 0 0 11px rgba(255,165,31,.65); }
+  .card.done .bulb { background: #1F5233; box-shadow: none; }
+  .card.live .bulb { background: var(--green); box-shadow: 0 0 15px rgba(59,224,122,.9); animation: throb 1.15s ease-in-out infinite; }
+  @keyframes throb { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+
+  .card .no {
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px; font-weight: 700;
+    color: var(--accent, #6B6F76); letter-spacing: .1em;
+  }
+  .card .tt {
+    font-family: 'Anton', Impact, sans-serif; font-size: 20px; text-transform: uppercase;
+    line-height: 1.02; margin: 4px 0 7px; transform: skewX(-6deg); transform-origin: left;
+  }
+  .card .meta {
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--steel);
+  }
+  .card.live .meta { color: var(--green); font-weight: 700; }
+  .card.done { opacity: .42; }
+
+  /* ---------- rev overlay ---------- */
+  #rev {
+    position: fixed; inset: 0; z-index: 60; display: none;
+    background: var(--asphalt); overflow: hidden;
+  }
+  #rev.on { display: block; }
+  .streak {
+    position: absolute; height: 2px; left: -45%; width: 45%;
+    background: linear-gradient(90deg, transparent, var(--sc, #E8E6E1));
+    animation: rip .5s cubic-bezier(.5,0,.3,1) forwards;
+  }
+  @keyframes rip { to { left: 130%; } }
+  .tach {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-weight: 700;
+    font-size: 62px; color: var(--sc, #E8E6E1);
+    text-shadow: 0 0 34px currentColor; letter-spacing: -.03em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- title card ---------- */
+  .tcard { padding: 30px 0 10px; animation: slam .34s cubic-bezier(.15,.9,.25,1); }
+  @keyframes slam {
+    from { opacity: 0; transform: translateY(22px) skewX(-3deg); }
+    to { opacity: 1; transform: none; }
+  }
+  .tcard .no {
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; font-weight: 700;
+    letter-spacing: .3em; color: var(--accent);
+  }
+  .tcard h2 {
+    font-family: 'Anton', Impact, sans-serif; font-size: clamp(34px, 11vw, 50px);
+    text-transform: uppercase; line-height: .92; letter-spacing: -.005em;
+    transform: skewX(-8deg); transform-origin: left;
+    margin: 11px 0 12px;
+  }
+  .tcard .when {
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--steel);
+  }
+
+  .slab {
+    background: var(--asphalt-2); border-radius: 4px; padding: 20px;
+    margin-top: 20px; border-top: 3px solid var(--accent);
+  }
+  .slab .lbl {
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px; font-weight: 700;
+    letter-spacing: .3em; text-transform: uppercase; color: var(--steel);
+    margin-bottom: 10px;
+  }
+  .slab .dress { font-size: 21px; line-height: 1.34; color: var(--chrome); }
+
+  .locked { text-align: center; padding: 34px 20px; }
+  .locked .big {
+    font-family: 'Anton', Impact, sans-serif; font-size: 27px; text-transform: uppercase;
+    color: var(--steel); transform: skewX(-8deg); margin-bottom: 9px;
+  }
+  .locked .small { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; letter-spacing: .12em; color: #4C5057; }
+
+  .redact { display: grid; gap: 10px; margin-top: 12px; }
+  .bar {
+    height: 15px; border-radius: 2px;
+    background: repeating-linear-gradient(-45deg, #24262B 0 7px, #1A1C20 7px 14px);
+  }
+  .stamp {
+    display: inline-block; margin-top: 13px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px; font-weight: 700;
+    letter-spacing: .24em; text-transform: uppercase;
+    color: var(--redline); border: 1px solid var(--redline);
+    padding: 5px 10px; border-radius: 2px; transform: rotate(-2.5deg);
+  }
+
+  .backrow { margin-top: 26px; display: grid; gap: 9px; }
+
+  .note {
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px; line-height: 1.7;
+    letter-spacing: .06em; color: #4C5057; text-align: center; margin-top: 26px;
+  }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%);
+    z-index: 80; max-width: 380px; width: calc(100% - 36px);
+    background: var(--asphalt-2); border: 1px solid var(--rail);
+    border-left: 3px solid var(--nos); border-radius: 3px;
+    padding: 12px 14px; font-size: 15px; line-height: 1.35; color: var(--chrome);
+    box-shadow: 0 14px 40px rgba(0,0,0,.6);
+  }
+  .toast.bad { border-left-color: var(--redline); }
+  .toast.ok { border-left-color: var(--green); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+<div id="rev"><div class="tach" id="tachNum">0</div></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ------------------------------------------------------------------
+     Fast Nights — an eleven-night watch-along schedule for two people.
+
+     The schedule lives in Supabase so either person can set it from their
+     own phone and the other just sees it. localStorage is only a cache, so
+     a cold start paints something instantly and a dropped connection does
+     not blank the page; the cloud is the source of truth.
+     ------------------------------------------------------------------ */
+
+  var MOVIES = [
+    { n:1,  yr:2001, t:"The Fast\nand the Furious", flat:"The Fast and the Furious", c:"#E01B24",
+      dress:"Baggy pants and a tight tank top. Letty shades optional." },
+    { n:2,  yr:2003, t:"2 Fast\n2 Furious", flat:"2 Fast 2 Furious", c:"#2FD4E8",
+      dress:"Miami Beach or Miami nightlife — you choose." },
+    { n:3,  yr:2006, t:"Tokyo\nDrift", flat:"Tokyo Drift", c:"#FF3EA5",
+      dress:"Gyaru. Pinterest it." },
+    { n:4,  yr:2009, t:"Fast &\nFurious", flat:"Fast & Furious", c:"#FFA51F",
+      dress:"Bandeau or off-the-shoulder top, and leggings that show off that ass." },
+    { n:5,  yr:2011, t:"Fast\nFive", flat:"Fast Five", c:"#3BE07A",
+      dress:"Something summery. Bring an appetite." },
+    { n:6,  yr:2013, t:"Fast &\nFurious 6", flat:"Fast & Furious 6", c:"#8B7BFF",
+      dress:"Leather jacket. Ready to ride." },
+    { n:7,  yr:2015, t:"Furious\nSeven", flat:"Furious 7", c:"#F2C14E",
+      dress:"The best thing in your closet. Full Abu Dhabi. I'm dressing up too." },
+    { n:8,  yr:2017, t:"The Fate\nof the Furious", flat:"The Fate of the Furious", c:"#7FE3FF",
+      dress:"All black. Every piece." },
+    { n:9,  yr:2019, t:"Hobbs\n& Shaw", flat:"Hobbs & Shaw", c:"#FF6B35",
+      dress:"Sexy gym outfit. Baby oil optional." },
+    { n:10, yr:2021, t:"F9", flat:"F9", c:"#5AC8FA",
+      dress:"Backyard cookout. Whatever you'd wear to a barbecue." },
+    { n:11, yr:2023, t:"Fast\nX", flat:"Fast X", c:"#C1121F",
+      dress:"Fast and Furious, but make it pajamas." }
+  ];
+
+  /* ---- SHARED STORAGE (Supabase) ------------------------------------
+     Same project as the closet, its own table. The whole schedule is one
+     row — eleven nights is a few hundred bytes, and one row makes a save
+     atomic, so a request that dies midway cannot leave half a schedule.
+     Setup SQL is in supabase/schema.sql. */
+  var SUPABASE_URL = "https://fuyzhjmyulpttqmxovaf.supabase.co";
+  var SUPABASE_KEY = "sb_publishable_0nreLSFDR4YwsVcAp2iKEw_Usm99ARt";
+  var ROW_ID = "main";
+  var CLOUD = !!SUPABASE_URL && !!SUPABASE_KEY;
+
+  /* Publishable keys go on the apikey header only — sent as a Bearer token
+     Supabase tries to parse them as a JWT and rejects them. */
+  var SBH = { apikey: SUPABASE_KEY, "Content-Type": "application/json" };
+
+  function cloudLoad() {
+    return fetch(SUPABASE_URL + "/rest/v1/fast_nights?id=eq." + ROW_ID + "&select=data,updated",
+                 { headers: SBH, cache: "no-store" })
+      .then(function (r) {
+        if (!r.ok) throw new Error("load " + r.status);
+        return r.json();
+      })
+      .then(function (rows) {
+        if (!rows.length) return null;
+        var row = rows[0];
+        return { nights: (row.data && row.data.nights) || {}, updated: row.updated || 0 };
+      });
+  }
+
+  function cloudSave(nights) {
+    var updated = Date.now();
+    var headers = Object.assign({}, SBH, { Prefer: "resolution=merge-duplicates" });
+    return fetch(SUPABASE_URL + "/rest/v1/fast_nights", {
+      method: "POST", headers: headers,
+      body: JSON.stringify([{ id: ROW_ID, data: { nights: nights }, updated: updated }])
+    }).then(function (r) {
+      if (!r.ok) throw new Error("save " + r.status);
+      return updated;
+    });
+  }
+
+  /* ---- local cache ---- */
+  var CACHE_KEY = "fastnights:v1";
+  function cacheLoad() {
+    try { var raw = localStorage.getItem(CACHE_KEY); return raw ? JSON.parse(raw) : null; }
+    catch (e) { return null; }
+  }
+  function cacheSave(st) {
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(st)); } catch (e) { /* private mode */ }
+  }
+
+  /* ---- tiny helpers ---- */
+  function $(id) { return document.getElementById(id); }
+  var ENT = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return ENT[c]; }); }
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function titleHtml(t) { return esc(t).replace(/\n/g, '<br>'); }
+
+  /* Canonical form: nights in order, only the ones with a date, times
+     defaulted. Comparing these is how "unsaved" is decided, so adding
+     nights out of order does not read as a change. It is also exactly what
+     goes to the cloud, which keeps the stored row tidy. */
+  function canon(nights) {
+    var out = {};
+    Object.keys(nights || {}).map(Number)
+      .filter(function (k) { return k >= 1 && k <= 11; })
+      .sort(function (a, b) { return a - b; })
+      .forEach(function (k) {
+        var e = nights[k] || nights[String(k)];
+        if (e && e.d) out[k] = { d: e.d, t: e.t || '19:30' };
+      });
+    return out;
+  }
+  function same(a, b) { return JSON.stringify(canon(a)) === JSON.stringify(canon(b)); }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  /* ---- state ---- */
+  var SEED = { nights: { 1: { d: '2026-08-29', t: '19:30' } }, updated: 0 };
+  var ST = cacheLoad() || SEED;
+  if (!ST.nights) ST.nights = {};
+  var draft = clone(ST.nights);
+
+  var view = 'lineup', cardN = null;
+  var busy = false;
+  var sync = CLOUD ? 'syncing' : 'local';   // syncing | ok | offline | saving | local
+  var theirsAhead = null;                   // their schedule, when it landed mid-edit
+
+  function dirty() { return !same(draft, ST.nights); }
+  function setCount() { return Object.keys(canon(draft)).length; }
+
+  /* ---- dates ---- */
+  function todayStr() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+  function pretty(ds, ts) {
+    if (!ds) return '';
+    var p = ds.split('-').map(Number);
+    var dt = new Date(p[0], p[1] - 1, p[2]);
+    if (isNaN(dt)) return ds;
+    var s = dt.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    if (ts) {
+      var q = ts.split(':').map(Number);
+      var ap = q[0] >= 12 ? 'pm' : 'am';
+      var h12 = q[0] % 12 === 0 ? 12 : q[0] % 12;
+      s += ' · ' + h12 + (q[1] ? ':' + pad(q[1]) : '') + ap;
+    }
+    return s;
+  }
+  function nightState(n) {
+    var e = draft[n];
+    if (!e || !e.d) return 'unset';
+    var t = todayStr();
+    if (e.d === t) return 'live';
+    return e.d < t ? 'done' : 'set';
+  }
+  function nextUp() {
+    var t = todayStr(), best = null;
+    MOVIES.forEach(function (m) {
+      var e = draft[m.n];
+      if (!e || !e.d || e.d < t) return;
+      if (!best || e.d < draft[best.n].d) best = m;
+    });
+    return best;
+  }
+  function savedAgo() {
+    // Guard against a junk timestamp in the row rendering as 1970.
+    if (!ST.updated || ST.updated < 15778e8) return '';
+    var mins = Math.round((Date.now() - ST.updated) / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    if (mins < 48 * 60) return Math.round(mins / 60) + 'h ago';
+    return new Date(ST.updated).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+
+  /* ---- sync ---- */
+  function refresh(initial) {
+    if (!CLOUD || busy) return Promise.resolve();
+    return cloudLoad().then(function (remote) {
+      sync = 'ok';
+      if (!remote) return;                       // table is empty; first save creates the row
+      if (!initial && remote.updated <= ST.updated) return;
+      if (initial || !dirty()) {
+        ST = remote;
+        cacheSave(ST);
+        draft = clone(ST.nights);
+        theirsAhead = null;
+      } else if (!same(remote.nights, draft)) {
+        // They saved while this person was mid-edit. Never silently discard
+        // either side — show both and let them choose.
+        theirsAhead = remote;
+      }
+    }).catch(function () {
+      sync = 'offline';
+    }).then(function () { render(); });
+  }
+
+  function save() {
+    if (busy) return;
+    if (!CLOUD) { toast('No cloud configured, so nothing was saved.', 'bad'); return; }
+    busy = true; sync = 'saving'; render();
+    var payload = canon(draft);
+    cloudSave(payload).then(function (updated) {
+      ST = { nights: payload, updated: updated };
+      draft = clone(payload);
+      cacheSave(ST);
+      theirsAhead = null;
+      sync = 'ok';
+      toast('Saved. Hunter sees this too.', 'ok');
+      if (view === 'setup') view = 'lineup';
+    }).catch(function () {
+      sync = 'offline';
+      toast('Could not reach the schedule. Your picks are still here — try again.', 'bad');
+    }).then(function () { busy = false; render(); });
+  }
+
+  function takeTheirs() {
+    if (!theirsAhead) return;
+    ST = theirsAhead;
+    draft = clone(ST.nights);
+    cacheSave(ST);
+    theirsAhead = null;
+    sync = 'ok';
+    render();
+    toast('Loaded their schedule.', 'ok');
+  }
+
+  /* ---- toast ---- */
+  var toastTimer = null;
+  function toast(msg, kind) {
+    var old = document.querySelector('.toast');
+    if (old) old.remove();
+    var el = document.createElement('div');
+    el.className = 'toast' + (kind ? ' ' + kind : '');
+    el.setAttribute('role', 'status');
+    el.textContent = msg;
+    document.body.appendChild(el);
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.remove(); }, 5200);
+  }
+
+  /* ---- views ---- */
+  function mast() {
+    return '<div class="mast">' +
+      '<div class="kicker">Eleven Movies · One Ride</div>' +
+      '<h1>Fast<br>Nights</h1>' +
+      '<div class="sub">You Set The Schedule</div>' +
+      '</div>';
+  }
+
+  function chip() {
+    if (!CLOUD)             return '<span class="chip">Local only</span>';
+    if (sync === 'saving')  return '<span class="chip warn">Saving…</span>';
+    if (sync === 'syncing') return '<span class="chip">Syncing…</span>';
+    if (sync === 'offline') return '<span class="chip bad">Offline</span>';
+    if (dirty())            return '<span class="chip warn">Unsaved</span>';
+    return '<span class="chip ok">Saved' + (savedAgo() ? ' · ' + esc(savedAgo()) : '') + '</span>';
+  }
+
+  function banner(head, body, kind, btnId, btnText) {
+    return '<div class="banner' + (kind ? ' ' + kind : '') + '">' +
+      '<div class="bh">' + esc(head) + '</div><p>' + esc(body) + '</p>' +
+      (btnId ? '<button class="btn ghost" id="' + btnId + '" style="margin-top:11px"><span>' +
+        esc(btnText) + '</span></button>' : '') +
+      '</div>';
+  }
+
+  function conflictBanner() {
+    if (!theirsAhead) return '';
+    return banner('They changed the schedule',
+      'Someone saved a different schedule while you were editing. Saving now replaces theirs with yours.',
+      'bad', 'taketheirs', 'Load theirs instead');
+  }
+
+  function offlineBanner() {
+    if (sync !== 'offline') return '';
+    return banner('Not connected',
+      'Showing the last schedule this phone saw. Changes will not reach the other person until it reconnects.',
+      'bad');
+  }
+
+  function setupView() {
+    var rows = MOVIES.map(function (m) {
+      var e = draft[m.n] || {};
+      return '<div class="srow">' +
+        '<div class="no">' + pad(m.n) + '</div>' +
+        '<div>' +
+          '<div class="tt">' + esc(m.flat) + '<span class="yr">' + m.yr + '</span></div>' +
+          '<div class="inputs">' +
+            '<input type="date" data-n="' + m.n + '" data-k="d" value="' + esc(e.d || '') + '" aria-label="Date for ' + esc(m.flat) + '">' +
+            '<input type="time" data-n="' + m.n + '" data-k="t" value="' + esc(e.t || '') + '" aria-label="Time for ' + esc(m.flat) + '">' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    return '<section>' +
+      '<p class="lede">Pick a night for each one. Set them all now or come back and fill them in as you go — whatever you save here is what the other person opens.</p>' +
+      conflictBanner() + offlineBanner() +
+      '<div id="srows">' + rows + '</div>' +
+      '<div class="sticky">' +
+        '<div class="count">' + setCount() + ' of 11 nights on the calendar</div>' +
+        '<button class="btn" id="save"' + (busy ? ' disabled' : '') + '><span>' +
+          (busy ? 'Saving…' : 'Lock it in') + '</span></button>' +
+        '<button class="btn ghost" id="tolineup"><span>See the lineup</span></button>' +
+      '</div>' +
+    '</section>';
+  }
+
+  function lineupView() {
+    var cards = MOVIES.map(function (m) {
+      var st = nightState(m.n), e = draft[m.n] || {};
+      var meta = st === 'live' ? '▸ Tonight'
+               : st === 'unset' ? 'No night set'
+               : (st === 'done' ? 'Watched · ' : '') + pretty(e.d, e.t);
+      return '<button class="card ' + st + '" data-n="' + m.n + '" style="--accent:' + m.c + '">' +
+        '<span class="bulb"></span>' +
+        '<div class="no">Night ' + pad(m.n) + '</div>' +
+        '<div class="tt">' + esc(m.flat) + '</div>' +
+        '<div class="meta">' + meta + '</div>' +
+      '</button>';
+    }).join('');
+
+    var up = nextUp();
+    var upTxt = up
+      ? (nightState(up.n) === 'live'
+          ? 'Tonight · <b>Night ' + pad(up.n) + '</b>'
+          : 'Next · <b>Night ' + pad(up.n) + '</b> · ' + esc(pretty(draft[up.n].d, '')))
+      : 'No nights left on the calendar';
+
+    return '<section>' +
+      '<div class="strip"><span class="up">' + upTxt + '</span>' + chip() + '</div>' +
+      conflictBanner() + offlineBanner() +
+      (dirty() && !theirsAhead ? banner('Unsaved changes',
+        'You changed the schedule but have not saved it, so nobody else can see it yet.') : '') +
+      '<p class="lede">Tap a night to see what to wear. Everything else stays sealed until you’re in it.</p>' +
+      '<div class="lineup">' + cards + '</div>' +
+      '<div class="rule"></div>' +
+      '<div class="backrow">' +
+        (dirty() ? '<button class="btn" id="save"' + (busy ? ' disabled' : '') + '><span>' +
+          (busy ? 'Saving…' : 'Save the schedule') + '</span></button>' : '') +
+        '<button class="btn ghost" id="edit"><span>' +
+          (setCount() > 1 ? 'Change the schedule' : 'Set the schedule') + '</span></button>' +
+      '</div>' +
+      '<p class="note">Dress code unlocks the morning of.<br>Menu and plan stay classified.</p>' +
+    '</section>';
+  }
+
+  function cardView(n) {
+    var m = MOVIES.filter(function (x) { return x.n === n; })[0];
+    var st = nightState(n), e = draft[n] || {};
+    var body;
+
+    if (st === 'unset') {
+      body = '<div class="slab"><div class="locked">' +
+        '<div class="big">No night set</div>' +
+        '<div class="small">Pick a date and this one opens up</div></div></div>';
+    } else if (st === 'set') {
+      body = '<div class="slab"><div class="locked">' +
+        '<div class="big">Sealed until ' + esc(pretty(e.d, '')) + '</div>' +
+        '<div class="small">Dress code drops that morning</div></div></div>';
+    } else {
+      body = '<div class="slab">' +
+        '<div class="lbl">Dress code</div>' +
+        '<div class="dress">' + esc(m.dress) + '</div></div>';
+    }
+
+    return '<section class="tcard" style="--accent:' + m.c + '">' +
+      '<div class="no">Night ' + pad(n) + ' / 11</div>' +
+      '<h2>' + titleHtml(m.t) + '</h2>' +
+      '<div class="when">' + (e.d ? esc(pretty(e.d, e.t)) : 'Unscheduled') + ' · ' + m.yr + '</div>' +
+      body +
+      '<div class="slab">' +
+        '<div class="lbl">Menu</div>' +
+        '<div class="redact"><div class="bar" style="width:78%"></div><div class="bar" style="width:54%"></div></div>' +
+        '<div class="lbl" style="margin-top:22px">The plan</div>' +
+        '<div class="redact"><div class="bar" style="width:88%"></div><div class="bar" style="width:41%"></div></div>' +
+        '<div class="stamp">Classified · Nate’s problem</div>' +
+      '</div>' +
+      '<div class="backrow">' +
+        '<button class="btn ghost" id="back"><span>← Back to the lineup</span></button>' +
+      '</div>' +
+    '</section>';
+  }
+
+  /* ---- render + wiring ---- */
+  function render() {
+    var html = mast();
+    if (view === 'setup') html += setupView();
+    else if (view === 'card') html += cardView(cardN);
+    else html += lineupView();
+    $('root').innerHTML = '<div class="wrap">' + html + '</div>';
+    wire();
+  }
+
+  function wire() {
+    var el;
+    if ((el = $('save')))       el.addEventListener('click', save);
+    if ((el = $('taketheirs'))) el.addEventListener('click', takeTheirs);
+    if ((el = $('tolineup')))   el.addEventListener('click', function () { go('lineup'); });
+    if ((el = $('edit')))       el.addEventListener('click', function () { go('setup'); });
+    if ((el = $('back')))       el.addEventListener('click', function () { go('lineup'); });
+
+    Array.prototype.forEach.call(document.querySelectorAll('#srows input'), function (i) {
+      i.addEventListener('change', function () {
+        var n = i.dataset.n;
+        if (!draft[n]) draft[n] = {};
+        draft[n][i.dataset.k] = i.value;
+        if (i.dataset.k === 'd' && i.value && !draft[n].t) draft[n].t = '19:30';
+        if (i.dataset.k === 'd' && !i.value) delete draft[n];
+        var c = document.querySelector('.count');
+        if (c) c.textContent = setCount() + ' of 11 nights on the calendar';
+      });
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll('.card'), function (c) {
+      c.addEventListener('click', function () { rev(Number(c.dataset.n)); });
+    });
+  }
+
+  function go(v, n) {
+    view = v; cardN = n || cardN;
+    render();
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  /* ---- rev animation ---- */
+  function rev(n) {
+    var m = MOVIES.filter(function (x) { return x.n === n; })[0];
+    var ov = $('rev');
+    ov.style.setProperty('--sc', m.c);
+    Array.prototype.forEach.call(ov.querySelectorAll('.streak'), function (s) { s.remove(); });
+
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) { go('card', n); return; }
+
+    for (var i = 0; i < 16; i++) {
+      var s = document.createElement('div');
+      s.className = 'streak';
+      s.style.top = (Math.random() * 100) + '%';
+      s.style.animationDelay = (Math.random() * 0.18) + 's';
+      s.style.opacity = (0.25 + Math.random() * 0.75).toFixed(2);
+      ov.appendChild(s);
+    }
+
+    ov.classList.add('on');
+    var num = $('tachNum'), t0 = performance.now(), DUR = 620;
+    (function tick(now) {
+      var p = Math.min((now - t0) / DUR, 1);
+      num.textContent = Math.round(1000 + 7400 * (1 - Math.pow(1 - p, 2.4)));
+      if (p < 1) requestAnimationFrame(tick);
+      else setTimeout(function () { ov.classList.remove('on'); go('card', n); }, 130);
+    })(t0);
+  }
+
+  /* ---- boot ---- */
+  view = setCount() > 1 ? 'lineup' : 'setup';
+  render();
+  refresh(true).then(function () {
+    if (view === 'setup' && setCount() > 1) go('lineup');
+  });
+
+  // Pick up the other person's saves without needing a reload.
+  setInterval(function () {
+    if (document.visibilityState === 'visible') refresh(false);
+  }, 20000);
+  window.addEventListener('focus', function () { refresh(false); });
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') refresh(false);
+  });
+})();
+</script>
+</body>
+</html>
