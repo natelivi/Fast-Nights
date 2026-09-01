@@ -361,11 +361,26 @@
      Supabase tries to parse them as a JWT and rejects them. */
   var SBH = { apikey: SUPABASE_KEY, "Content-Type": "application/json" };
 
+  /* PostgREST explains itself in the body — a missing table, a refused key
+     and a dead network are three different problems and the page should say
+     which one it hit, not just "not connected". */
+  function sbFail(r) {
+    return r.text().then(function (t) {
+      var msg = '';
+      try { var j = JSON.parse(t); msg = j.message || j.hint || j.error || ''; }
+      catch (e) { msg = (t || '').slice(0, 160); }
+      var err = new Error(msg || ('HTTP ' + r.status));
+      err.status = r.status;
+      err.detail = msg;
+      throw err;
+    });
+  }
+
   function cloudLoad() {
     return fetch(SUPABASE_URL + "/rest/v1/fast_nights?id=eq." + ROW_ID + "&select=data,updated",
                  { headers: SBH, cache: "no-store" })
       .then(function (r) {
-        if (!r.ok) throw new Error("load " + r.status);
+        if (!r.ok) return sbFail(r);
         return r.json();
       })
       .then(function (rows) {
@@ -382,7 +397,7 @@
       method: "POST", headers: headers,
       body: JSON.stringify([{ id: ROW_ID, data: { nights: nights }, updated: updated }])
     }).then(function (r) {
-      if (!r.ok) throw new Error("save " + r.status);
+      if (!r.ok) return sbFail(r);
       return updated;
     });
   }
@@ -432,6 +447,8 @@
   var busy = false;
   var sync = CLOUD ? 'syncing' : 'local';   // syncing | ok | offline | saving | local
   var theirsAhead = null;                   // their schedule, when it landed mid-edit
+  var lastError = null;                     // why the last cloud call failed
+  var cloudEmpty = false;                   // reached the table, found no row
 
   function dirty() { return !same(draft, ST.nights); }
   function setCount() { return Object.keys(canon(draft)).length; }
@@ -486,7 +503,9 @@
     if (!CLOUD || busy) return Promise.resolve();
     return cloudLoad().then(function (remote) {
       sync = 'ok';
-      if (!remote) return;                       // table is empty; first save creates the row
+      lastError = null;
+      cloudEmpty = !remote;
+      if (!remote) return;                       // no row yet; the first save creates it
       if (!initial && remote.updated <= ST.updated) return;
       if (initial || !dirty()) {
         ST = remote;
@@ -498,8 +517,9 @@
         // either side — show both and let them choose.
         theirsAhead = remote;
       }
-    }).catch(function () {
+    }).catch(function (err) {
       sync = 'offline';
+      lastError = err || null;
     }).then(function () { render(); });
   }
 
@@ -516,9 +536,10 @@
       sync = 'ok';
       toast('Saved. Hunter sees this too.', 'ok');
       if (view === 'setup') view = 'lineup';
-    }).catch(function () {
+    }).catch(function (err) {
       sync = 'offline';
-      toast('Could not reach the schedule. Your picks are still here — try again.', 'bad');
+      lastError = err || null;
+      toast('Did not save: ' + why(err) + ' Your picks are still here.', 'bad');
     }).then(function () { busy = false; render(); });
   }
 
@@ -562,6 +583,7 @@
     if (sync === 'syncing') return '<span class="chip">Syncing…</span>';
     if (sync === 'offline') return '<span class="chip bad">Offline</span>';
     if (dirty())            return '<span class="chip warn">Unsaved</span>';
+    if (cloudEmpty)         return '<span class="chip warn">Not saved yet</span>';
     return '<span class="chip ok">Saved' + (savedAgo() ? ' · ' + esc(savedAgo()) : '') + '</span>';
   }
 
@@ -580,11 +602,43 @@
       'bad', 'taketheirs', 'Load theirs instead');
   }
 
-  function offlineBanner() {
+  /* One sentence naming the actual cause, reused by the banner and the toast. */
+  function why(err) {
+    var e = err || {};
+    var missing = e.status === 404 || /does not exist|schema cache|not find the table/i.test(e.detail || '');
+    if (missing) return 'the fast_nights table is not there yet.';
+    if (e.status === 401 || e.status === 403) return 'Supabase refused the key (' + e.status + ').';
+    if (!e.status) return 'the page could not reach Supabase at all.';
+    return 'Supabase answered ' + e.status + '.';
+  }
+
+  function problemBanner() {
     if (sync !== 'offline') return '';
-    return banner('Not connected',
-      'Showing the last schedule this phone saw. Changes will not reach the other person until it reconnects.',
-      'bad');
+    var e = lastError || {};
+    var missing = e.status === 404 || /does not exist|schema cache|not find the table/i.test(e.detail || '');
+    var head, body;
+    if (missing) {
+      head = 'The schedule table is missing';
+      body = 'Run supabase/schema.sql in the Supabase SQL editor, then reload this page.';
+    } else if (e.status === 401 || e.status === 403) {
+      head = 'Supabase refused the key';
+      body = 'It answered ' + e.status + '. Check the publishable key, and that the table\u2019s row-level-security policies allow read and write.';
+    } else if (!e.status) {
+      head = 'Not connected';
+      body = 'The page could not reach Supabase at all. Showing the last schedule this phone saw.';
+    } else {
+      head = 'Supabase answered ' + e.status;
+      body = 'Showing the last schedule this phone saw.';
+    }
+    if (e.detail) body += ' \u2014 it said: \u201c' + e.detail + '\u201d';
+    return banner(head, body, 'bad');
+  }
+
+  /* Reaching the table and finding nothing is not the same as being saved. */
+  function emptyBanner() {
+    if (sync !== 'ok' || !cloudEmpty) return '';
+    return banner('Nothing stored yet',
+      'The table is reachable but holds no schedule. Whatever you save here creates it.');
   }
 
   function setupView() {
@@ -604,7 +658,7 @@
 
     return '<section>' +
       '<p class="lede">Pick a night for each one. Set them all now or come back and fill them in as you go — whatever you save here is what the other person opens.</p>' +
-      conflictBanner() + offlineBanner() +
+      conflictBanner() + problemBanner() + emptyBanner() +
       '<div id="srows">' + rows + '</div>' +
       '<div class="sticky">' +
         '<div class="count">' + setCount() + ' of 11 nights on the calendar</div>' +
@@ -638,7 +692,7 @@
 
     return '<section>' +
       '<div class="strip"><span class="up">' + upTxt + '</span>' + chip() + '</div>' +
-      conflictBanner() + offlineBanner() +
+      conflictBanner() + problemBanner() + emptyBanner() +
       (dirty() && !theirsAhead ? banner('Unsaved changes',
         'You changed the schedule but have not saved it, so nobody else can see it yet.') : '') +
       '<p class="lede">Tap a night to see what to wear. Everything else stays sealed until you’re in it.</p>' +
