@@ -15,8 +15,8 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const LINEUP_URL   = 'https://natelivi.github.io/Fast-Nights/';
-const SUPABASE_URL = 'https://fuyzhjmyulpttqmxovaf.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_0nreLSFDR4YwsVcAp2iKEw_Usm99ARt';
+const SUPABASE_URL = 'https://dvfhhjxncmzffefrzfif.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_xTd4KAx6RSdQUjxBzDXIwg_y72lKpzh';
 
 const MOVIES = [
   [1, 2001, 'The Fast and the Furious'], [2, 2003, '2 Fast 2 Furious'],

@@ -348,12 +348,12 @@
   ];
 
   /* ---- SHARED STORAGE (Supabase) ------------------------------------
-     Same project as the closet, its own table. The whole schedule is one
+     Its own Supabase project (not the closet's). The whole schedule is one
      row — eleven nights is a few hundred bytes, and one row makes a save
      atomic, so a request that dies midway cannot leave half a schedule.
      Setup SQL is in supabase/schema.sql. */
-  var SUPABASE_URL = "https://fuyzhjmyulpttqmxovaf.supabase.co";
-  var SUPABASE_KEY = "sb_publishable_0nreLSFDR4YwsVcAp2iKEw_Usm99ARt";
+  var SUPABASE_URL = "https://dvfhhjxncmzffefrzfif.supabase.co";
+  var SUPABASE_KEY = "sb_publishable_xTd4KAx6RSdQUjxBzDXIwg_y72lKpzh";
   var ROW_ID = "main";
   var CLOUD = !!SUPABASE_URL && !!SUPABASE_KEY;
 
