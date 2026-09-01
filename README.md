@@ -17,7 +17,7 @@ single self-contained HTML page with a shared cloud schedule.
 
 ## How the schedule is shared
 
-The schedule lives in Supabase, in the same project as the closet, in its own
+The schedule lives in Supabase, in its own Fast Nights project, in a
 `fast_nights` table. The whole schedule is **one row** — eleven nights is a few
 hundred bytes, and one row makes a save atomic, so a request that dies midway
 cannot leave half a schedule behind.

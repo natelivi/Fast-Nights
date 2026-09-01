@@ -11,7 +11,7 @@ Send the Fast Nights morning-of reminder. Run this end to end on your own — no
 STEP 1 — Read the live schedule.
 Run this in Bash:
 
-  curl -s "https://fuyzhjmyulpttqmxovaf.supabase.co/rest/v1/fast_nights?id=eq.main&select=data,updated" -H "apikey: sb_publishable_0nreLSFDR4YwsVcAp2iKEw_Usm99ARt"
+  curl -s "https://dvfhhjxncmzffefrzfif.supabase.co/rest/v1/fast_nights?id=eq.main&select=data,updated" -H "apikey: sb_publishable_xTd4KAx6RSdQUjxBzDXIwg_y72lKpzh"
 
 It returns a JSON array holding one row, shaped like:
   [{"data":{"nights":{"1":{"d":"2026-08-29","t":"19:30"},"5":{"d":"2026-09-19","t":"20:00"}}},"updated":1788110000000}]

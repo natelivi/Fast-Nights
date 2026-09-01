@@ -1,6 +1,6 @@
 -- Fast Nights — shared schedule.
 --
--- Run this once in the Supabase SQL editor (same project as the closet).
+-- Run this once in the Fast Nights project's Supabase SQL editor.
 -- The whole schedule is one row: eleven nights is a few hundred bytes, so
 -- there is nothing to gain from a row per night, and a single row makes a
 -- save atomic — no half-written schedule if a request dies midway.
@@ -15,7 +15,7 @@ alter table public.fast_nights enable row level security;
 
 -- The page ships a publishable key, so these policies describe what anyone
 -- who finds the URL can do: read and rewrite this one table. That is the
--- same posture as closet_items. It is fine for a movie schedule — there is
+-- same posture Sand and Saddle takes. It is fine for a movie schedule — there is
 -- nothing here worth stealing — but it is not privacy, and a stranger who
 -- had the URL could scramble the dates. Nothing else in the project is
 -- reachable with this key beyond what its own policies already allow.
