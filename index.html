@@ -158,6 +158,43 @@
   }
   input:focus { border-color: var(--nos); outline: none; }
 
+  textarea {
+    width: 100%; font-family: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+    font-size: 17px; line-height: 1.35;
+    background: var(--asphalt-2); color: var(--chrome);
+    border: 1px solid var(--rail); border-radius: 3px; padding: 10px 9px;
+    resize: vertical; min-height: 64px;
+  }
+  textarea:focus { border-color: var(--nos); outline: none; }
+  input[type=password] {
+    width: 100%; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 14px;
+    background: var(--asphalt-2); color: var(--chrome);
+    border: 1px solid var(--rail); border-radius: 3px; padding: 12px 10px;
+  }
+
+  .krow { padding: 15px 0; border-bottom: 1px solid var(--track); }
+  .kh { display: flex; align-items: baseline; gap: 9px; margin-bottom: 8px; }
+  .kh .kn {
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; font-weight: 700;
+    color: var(--accent, #6B6F76); letter-spacing: .1em;
+  }
+  .kh .kt {
+    font-family: 'Anton', Impact, sans-serif; font-size: 17px; text-transform: uppercase;
+    letter-spacing: .01em;
+  }
+  .gate { max-width: 300px; margin: 30px auto; display: grid; gap: 11px; text-align: center; }
+  .gate .gh {
+    font-family: 'Anton', Impact, sans-serif; font-size: 23px; text-transform: uppercase;
+    transform: skewX(-8deg); color: var(--steel);
+  }
+  .keeperlink {
+    display: inline-block; margin-top: 14px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px;
+    letter-spacing: .22em; text-transform: uppercase;
+    color: #34373C; text-decoration: none; border-bottom: 1px solid #24262B;
+  }
+  .keeperlink:hover { color: var(--steel); border-color: var(--steel); }
+
   .sticky {
     position: sticky; bottom: 0; padding: 16px 0 20px;
     background: linear-gradient(to top, var(--asphalt) 68%, transparent);
@@ -323,28 +360,17 @@
      ------------------------------------------------------------------ */
 
   var MOVIES = [
-    { n:1,  yr:2001, t:"The Fast\nand the Furious", flat:"The Fast and the Furious", c:"#E01B24",
-      dress:"Baggy pants and a tight tank top. Letty shades optional." },
-    { n:2,  yr:2003, t:"2 Fast\n2 Furious", flat:"2 Fast 2 Furious", c:"#2FD4E8",
-      dress:"Miami Beach or Miami nightlife — you choose." },
-    { n:3,  yr:2006, t:"Tokyo\nDrift", flat:"Tokyo Drift", c:"#FF3EA5",
-      dress:"Gyaru. Pinterest it." },
-    { n:4,  yr:2009, t:"Fast &\nFurious", flat:"Fast & Furious", c:"#FFA51F",
-      dress:"Bandeau or off-the-shoulder top, and leggings that show off that ass." },
-    { n:5,  yr:2011, t:"Fast\nFive", flat:"Fast Five", c:"#3BE07A",
-      dress:"Something summery. Bring an appetite." },
-    { n:6,  yr:2013, t:"Fast &\nFurious 6", flat:"Fast & Furious 6", c:"#8B7BFF",
-      dress:"Leather jacket. Ready to ride." },
-    { n:7,  yr:2015, t:"Furious\nSeven", flat:"Furious 7", c:"#F2C14E",
-      dress:"The best thing in your closet. Full Abu Dhabi. I'm dressing up too." },
-    { n:8,  yr:2017, t:"The Fate\nof the Furious", flat:"The Fate of the Furious", c:"#7FE3FF",
-      dress:"All black. Every piece." },
-    { n:9,  yr:2019, t:"Hobbs\n& Shaw", flat:"Hobbs & Shaw", c:"#FF6B35",
-      dress:"Sexy gym outfit. Baby oil optional." },
-    { n:10, yr:2021, t:"F9", flat:"F9", c:"#5AC8FA",
-      dress:"Backyard cookout. Whatever you'd wear to a barbecue." },
-    { n:11, yr:2023, t:"Fast\nX", flat:"Fast X", c:"#C1121F",
-      dress:"Fast and Furious, but make it pajamas." }
+    { n:1,  yr:2001, t:"The Fast\nand the Furious", flat:"The Fast and the Furious", c:"#E01B24" },
+    { n:2,  yr:2003, t:"2 Fast\n2 Furious", flat:"2 Fast 2 Furious", c:"#2FD4E8" },
+    { n:3,  yr:2006, t:"Tokyo\nDrift", flat:"Tokyo Drift", c:"#FF3EA5" },
+    { n:4,  yr:2009, t:"Fast &\nFurious", flat:"Fast & Furious", c:"#FFA51F" },
+    { n:5,  yr:2011, t:"Fast\nFive", flat:"Fast Five", c:"#3BE07A" },
+    { n:6,  yr:2013, t:"Fast &\nFurious 6", flat:"Fast & Furious 6", c:"#8B7BFF" },
+    { n:7,  yr:2015, t:"Furious\nSeven", flat:"Furious 7", c:"#F2C14E" },
+    { n:8,  yr:2017, t:"The Fate\nof the Furious", flat:"The Fate of the Furious", c:"#7FE3FF" },
+    { n:9,  yr:2019, t:"Hobbs\n& Shaw", flat:"Hobbs & Shaw", c:"#FF6B35" },
+    { n:10, yr:2021, t:"F9", flat:"F9", c:"#5AC8FA" },
+    { n:11, yr:2023, t:"Fast\nX", flat:"Fast X", c:"#C1121F" }
   ];
 
   /* ---- SHARED STORAGE (Supabase) ------------------------------------
@@ -355,6 +381,12 @@
   var SUPABASE_URL = "https://dvfhhjxncmzffefrzfif.supabase.co";
   var SUPABASE_KEY = "sb_publishable_xTd4KAx6RSdQUjxBzDXIwg_y72lKpzh";
   var ROW_ID = "main";
+
+  /* The dress codes are the surprise, so the screen that edits them sits
+     behind this. The page is public, so it is a speed bump to stop the
+     other person wandering in while setting dates — not security. Anyone
+     reading the page source can find both this and the API key. */
+  var KEEPER_PASSWORD = "toretto";
   var CLOUD = !!SUPABASE_URL && !!SUPABASE_KEY;
 
   /* Publishable keys go on the apikey header only — sent as a Bearer token
@@ -386,16 +418,17 @@
       .then(function (rows) {
         if (!rows.length) return null;
         var row = rows[0];
-        return { nights: (row.data && row.data.nights) || {}, updated: row.updated || 0 };
+        var d = row.data || {};
+        return { nights: d.nights || {}, dress: d.dress || null, updated: row.updated || 0 };
       });
   }
 
-  function cloudSave(nights) {
+  function cloudSave(nights, dress) {
     var updated = Date.now();
     var headers = Object.assign({}, SBH, { Prefer: "resolution=merge-duplicates" });
     return fetch(SUPABASE_URL + "/rest/v1/fast_nights", {
       method: "POST", headers: headers,
-      body: JSON.stringify([{ id: ROW_ID, data: { nights: nights }, updated: updated }])
+      body: JSON.stringify([{ id: ROW_ID, data: { nights: nights, dress: dress }, updated: updated }])
     }).then(function (r) {
       if (!r.ok) return sbFail(r);
       return updated;
@@ -438,19 +471,44 @@
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
 
   /* ---- state ---- */
-  var SEED = { nights: { 1: { d: '2026-08-29', t: '19:30' } }, updated: 0 };
+  var SEED = { nights: { 1: { d: '2026-08-29', t: '19:30' } }, dress: null, updated: 0 };
   var ST = cacheLoad() || SEED;
   if (!ST.nights) ST.nights = {};
+  if (ST.dress === undefined) ST.dress = null;
   var draft = clone(ST.nights);
+  /* null means the row has no dress codes at all — a database that predates
+     them, so the page says so rather than inventing text. {} would mean
+     eleven blanks, which is a different thing. */
+  var dressDraft = ST.dress ? clone(ST.dress) : null;
 
   var view = 'lineup', cardN = null;
   var busy = false;
   var sync = CLOUD ? 'syncing' : 'local';   // syncing | ok | offline | saving | local
   var theirsAhead = null;                   // their schedule, when it landed mid-edit
   var lastError = null;                     // why the last cloud call failed
+  var keeperOpen = false;                   // password accepted this session
+  var keeperTried = false;                  // a wrong password to report
   var cloudEmpty = false;                   // reached the table, found no row
 
-  function dirty() { return !same(draft, ST.nights); }
+  function canonDress(d) {
+    if (!d) return null;
+    var out = {};
+    Object.keys(d).map(Number).filter(function (k) { return k >= 1 && k <= 11; })
+      .sort(function (a, b) { return a - b; })
+      .forEach(function (k) {
+        var v = (d[k] || d[String(k)] || '').trim();
+        if (v) out[k] = v;
+      });
+    return out;
+  }
+  function dirty() {
+    return !same(draft, ST.nights) ||
+      JSON.stringify(canonDress(dressDraft)) !== JSON.stringify(canonDress(ST.dress));
+  }
+  function dressOf(n) {
+    if (!dressDraft) return '';
+    return (dressDraft[n] || dressDraft[String(n)] || '').trim();
+  }
   function setCount() { return Object.keys(canon(draft)).length; }
 
   /* ---- dates ---- */
@@ -511,6 +569,7 @@
         ST = remote;
         cacheSave(ST);
         draft = clone(ST.nights);
+        dressDraft = ST.dress ? clone(ST.dress) : null;
         theirsAhead = null;
       } else if (!same(remote.nights, draft)) {
         // They saved while this person was mid-edit. Never silently discard
@@ -528,9 +587,11 @@
     if (!CLOUD) { toast('No cloud configured, so nothing was saved.', 'bad'); return; }
     busy = true; sync = 'saving'; render();
     var payload = canon(draft);
-    cloudSave(payload).then(function (updated) {
-      ST = { nights: payload, updated: updated };
+    var dressPayload = canonDress(dressDraft);
+    cloudSave(payload, dressPayload).then(function (updated) {
+      ST = { nights: payload, dress: dressPayload, updated: updated };
       draft = clone(payload);
+      dressDraft = dressPayload ? clone(dressPayload) : null;
       cacheSave(ST);
       theirsAhead = null;
       sync = 'ok';
@@ -547,6 +608,7 @@
     if (!theirsAhead) return;
     ST = theirsAhead;
     draft = clone(ST.nights);
+    dressDraft = ST.dress ? clone(ST.dress) : null;
     cacheSave(ST);
     theirsAhead = null;
     sync = 'ok';
@@ -634,6 +696,19 @@
     return banner(head, body, 'bad');
   }
 
+  /* A row that predates the dress codes reads as eleven blank cards, which
+     looks like a bug rather than a migration that has not been run. */
+  function noDressYet() {
+    var c = canonDress(dressDraft);
+    return !c || !Object.keys(c).length;
+  }
+  function dressBanner() {
+    if (sync !== 'ok' || cloudEmpty || !noDressYet()) return '';
+    return banner('No dress codes in the database',
+      'The schedule is fine, but no dress codes are stored. Run supabase/dress-codes.sql in the SQL editor to load them — saving from here before you do would leave them blank.',
+      'bad');
+  }
+
   /* Reaching the table and finding nothing is not the same as being saved. */
   function emptyBanner() {
     if (sync !== 'ok' || !cloudEmpty) return '';
@@ -658,7 +733,7 @@
 
     return '<section>' +
       '<p class="lede">Pick a night for each one. Set them all now or come back and fill them in as you go — whatever you save here is what the other person opens.</p>' +
-      conflictBanner() + problemBanner() + emptyBanner() +
+      conflictBanner() + problemBanner() + emptyBanner() + dressBanner() + dressBanner() +
       '<div id="srows">' + rows + '</div>' +
       '<div class="sticky">' +
         '<div class="count">' + setCount() + ' of 11 nights on the calendar</div>' +
@@ -692,7 +767,7 @@
 
     return '<section>' +
       '<div class="strip"><span class="up">' + upTxt + '</span>' + chip() + '</div>' +
-      conflictBanner() + problemBanner() + emptyBanner() +
+      conflictBanner() + problemBanner() + emptyBanner() + dressBanner() + dressBanner() +
       (dirty() && !theirsAhead ? banner('Unsaved changes',
         'You changed the schedule but have not saved it, so nobody else can see it yet.') : '') +
       '<p class="lede">Tap a night to see what to wear. Everything else stays sealed until you’re in it.</p>' +
@@ -704,7 +779,44 @@
         '<button class="btn ghost" id="edit"><span>' +
           (setCount() > 1 ? 'Change the schedule' : 'Set the schedule') + '</span></button>' +
       '</div>' +
-      '<p class="note">Dress code unlocks the morning of.<br>Menu and plan stay classified.</p>' +
+      '<p class="note">Dress code unlocks the morning of.<br>Menu and plan stay classified.' +
+        '<br><a class="keeperlink" id="keeper" href="#dress">Keeper</a></p>' +
+    '</section>';
+  }
+
+  function keeperView() {
+    if (!keeperOpen) {
+      return '<section><div class="gate">' +
+        '<div class="gh">Keeper only</div>' +
+        '<p class="lede" style="margin:0">The dress codes live behind this so nobody spoils them by looking for a date.</p>' +
+        '<input type="password" id="pw" placeholder="Password" aria-label="Keeper password" autocomplete="current-password">' +
+        (keeperTried ? '<div class="count" style="color:var(--redline)">Not that one.</div>' : '') +
+        '<button class="btn" id="unlock"><span>Open</span></button>' +
+        '<button class="btn ghost" id="tolineup"><span>Back to the lineup</span></button>' +
+        '</div></section>';
+    }
+
+    var rows = MOVIES.map(function (m) {
+      return '<div class="krow" style="--accent:' + m.c + '">' +
+        '<div class="kh"><span class="kn">' + pad(m.n) + '</span>' +
+        '<span class="kt">' + esc(m.flat) + '</span></div>' +
+        '<textarea data-dress="' + m.n + '" rows="2" aria-label="Dress code for ' + esc(m.flat) + '">' +
+          esc(dressOf(m.n)) + '</textarea>' +
+      '</div>';
+    }).join('');
+
+    var written = MOVIES.filter(function (m) { return dressOf(m.n); }).length;
+
+    return '<section>' +
+      '<p class="lede">What each night calls for. These are sealed on the lineup until the morning of, so only you see them here.</p>' +
+      conflictBanner() + problemBanner() + dressBanner() +
+      '<div id="krows">' + rows + '</div>' +
+      '<div class="sticky">' +
+        '<div class="count">' + written + ' of 11 written</div>' +
+        '<button class="btn" id="save"' + (busy ? ' disabled' : '') + '><span>' +
+          (busy ? 'Saving…' : 'Save the dress codes') + '</span></button>' +
+        '<button class="btn ghost" id="tolineup"><span>Back to the lineup</span></button>' +
+      '</div>' +
     '</section>';
   }
 
@@ -722,9 +834,10 @@
         '<div class="big">Sealed until ' + esc(pretty(e.d, '')) + '</div>' +
         '<div class="small">Dress code drops that morning</div></div></div>';
     } else {
+      var d = dressOf(n);
       body = '<div class="slab">' +
         '<div class="lbl">Dress code</div>' +
-        '<div class="dress">' + esc(m.dress) + '</div></div>';
+        '<div class="dress">' + (d ? esc(d) : 'Nothing written for this one yet.') + '</div></div>';
     }
 
     return '<section class="tcard" style="--accent:' + m.c + '">' +
@@ -750,6 +863,7 @@
     var html = mast();
     if (view === 'setup') html += setupView();
     else if (view === 'card') html += cardView(cardN);
+    else if (view === 'keeper') html += keeperView();
     else html += lineupView();
     $('root').innerHTML = '<div class="wrap">' + html + '</div>';
     wire();
@@ -762,6 +876,33 @@
     if ((el = $('tolineup')))   el.addEventListener('click', function () { go('lineup'); });
     if ((el = $('edit')))       el.addEventListener('click', function () { go('setup'); });
     if ((el = $('back')))       el.addEventListener('click', function () { go('lineup'); });
+    if ((el = $('keeper')))     el.addEventListener('click', function (ev) { ev.preventDefault(); go('keeper'); });
+
+    if ((el = $('unlock'))) {
+      var tryUnlock = function () {
+        var v = ($('pw') || {}).value || '';
+        if (v === KEEPER_PASSWORD) {
+          keeperOpen = true; keeperTried = false;
+          try { sessionStorage.setItem('fn-keeper', '1'); } catch (e) {}
+        } else {
+          keeperTried = true;
+        }
+        render();
+      };
+      el.addEventListener('click', tryUnlock);
+      if ((el = $('pw'))) el.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter') tryUnlock();
+      });
+    }
+
+    Array.prototype.forEach.call(document.querySelectorAll('#krows textarea'), function (t) {
+      t.addEventListener('input', function () {
+        if (!dressDraft) dressDraft = {};
+        dressDraft[t.dataset.dress] = t.value;
+        var c = document.querySelector('.count');
+        if (c) c.textContent = MOVIES.filter(function (m) { return dressOf(m.n); }).length + ' of 11 written';
+      });
+    });
 
     Array.prototype.forEach.call(document.querySelectorAll('#srows input'), function (i) {
       i.addEventListener('change', function () {
@@ -782,6 +923,14 @@
 
   function go(v, n) {
     view = v; cardN = n || cardN;
+    /* Keep #dress in the address bar so the keeper screen can be reopened
+       from a bookmark, and drop it on the way out. */
+    try {
+      var want = v === 'keeper' ? '#dress' : '';
+      if ((location.hash || '') !== want) {
+        history.replaceState(null, '', location.pathname + location.search + want);
+      }
+    } catch (e) { /* file:// in some browsers */ }
     render();
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
@@ -816,7 +965,9 @@
   }
 
   /* ---- boot ---- */
-  view = setCount() > 1 ? 'lineup' : 'setup';
+  try { keeperOpen = sessionStorage.getItem('fn-keeper') === '1'; } catch (e) {}
+  view = (location.hash === '#dress') ? 'keeper'
+       : setCount() > 1 ? 'lineup' : 'setup';
   render();
   refresh(true).then(function () {
     if (view === 'setup' && setCount() > 1) go('lineup');

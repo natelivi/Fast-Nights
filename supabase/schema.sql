@@ -1,6 +1,7 @@
 -- Fast Nights — shared schedule.
 --
--- Run this once in the Fast Nights project's Supabase SQL editor.
+-- Run this once in the Fast Nights project's Supabase SQL editor, then run
+-- supabase/dress-codes.sql to load the dress codes into the same row.
 -- The whole schedule is one row: eleven nights is a few hundred bytes, so
 -- there is nothing to gain from a row per night, and a single row makes a
 -- save atomic — no half-written schedule if a request dies midway.
