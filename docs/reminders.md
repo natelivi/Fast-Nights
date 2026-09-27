@@ -46,6 +46,14 @@ If the interface will not attach a connector to an existing routine, create
 a new one on the same schedule and paste `docs/reminder-prompt.md` as the
 prompt.
 
+**Its stored prompt is out of date.** The routine still carries the version
+that had the eleven dress codes written into it, from before they moved into
+the database. That copy will drift from whatever is on the keeper screen. The
+session that moved them could not reach the routine tooling to update it, so
+when you enable the routine, replace its prompt with the current
+`docs/reminder-prompt.md`, which reads the dress codes from the row instead of
+carrying its own.
+
 ### Daylight saving
 
 The cron is `0 14 * * *` — 14:00 UTC, which is 8:00am Mountain **while
